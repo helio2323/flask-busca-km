@@ -2,6 +2,8 @@ from flask import Flask
 
 app = Flask(__name__)
 
+import requests
+
 from geopy.geocoders import Nominatim
 
 def criar_string_pontos_por_cidades(cidades):
