@@ -61,7 +61,7 @@ async def ler_valor():
 async def atualizar_valor(valor):
     with open('contagem.txt', 'w') as arquivo:
         arquivo.write(str(valor))
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET'])
 async def hello():
     return jsonify({'message': 'Hello World'})
 
@@ -70,7 +70,7 @@ async def hello():
 async def creditos():
     creditos = await ler_valor()
     return jsonify({'quantidade_api': creditos})
-@app.route('/km/<path:cidades>', methods=['GET'])
+@app.route('/km/<path:cidades>', methods=['POST'])
 async def home(cidades):
     input_data = request.json
     print(input_data['api_key'])
