@@ -64,7 +64,13 @@ async def atualizar_valor(valor):
 @app.route('/', methods=['POST'])
 async def hello():
     return jsonify({'message': 'Hello World'})
-@app.route('/km/<path:cidades>', methods=['POST'])
+
+
+@app.route('/creditos', methods=['GET'])
+async def creditos():
+    creditos = await ler_valor()
+    return jsonify({'quantidade_api': creditos})
+@app.route('/km/<path:cidades>', methods=['GET'])
 async def home(cidades):
     input_data = request.json
     print(input_data['api_key'])
