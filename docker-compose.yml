@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  flask-busca-km:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask-busca-km
+    ports:
+      - "5000:5000"  # ajuste a porta conforme necessário
+    command: python3 index.py
+    tty: true
