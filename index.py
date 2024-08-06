@@ -32,7 +32,7 @@ async def chamar_api_rotas_brasil(url):
         'authority': 'rotasbrasil.com.br',
         'accept': '*/*',
         'accept-language': 'pt-BR,pt;q=0.7',
-        'cookie': 'RBNOTIFICATION=true; RBCOUNTNOTIFICATION=19; JSESSIONID=DD991B79A608CF2F40C3DDD0428DD789; veiculo=2; eixo=2; precoCombustivel=; consumo=',
+        'cookie': 'RBNOTIFICATION=true; RBCOUNTNOTIFICATION=19; JSESSIONID=DD991B79A608CF2F40C3DDD0428DD789; veiculo=4; eixo=6; precoCombustivel=; consumo=',
         'referer': 'https://rotasbrasil.com.br/',
         'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Brave";v="122"',
         'sec-ch-ua-mobile': '?0',
