@@ -70,10 +70,10 @@ async def hello():
 async def creditos():
     creditos = await ler_valor()
     return jsonify({'quantidade_api': creditos})
-@app.route('/km/<path:cidades>', methods=['POST'])
+@app.route('/km/<path:cidades>', methods=['GET'])
 async def home(cidades):
-    input_data = request.json
-    print(input_data['api_key'])
+    #input_data = request.json
+    #print(input_data['api_key'])
 
     quantidade_api = await ler_valor()
 
