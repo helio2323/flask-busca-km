@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Distâncias e Pedágios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background-color: #f8f9ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #764ba2;
+            background-color: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0 0 15px 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .results-table th {
+            background-color: #f8f9ff;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #c33;
+        }
+
+        .success {
+            background-color: #efe;
+            color: #393;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #393;
+        }
+
+        .info-box {
+            background-color: #f0f4ff;
+            border: 1px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-section {
+                padding: 20px;
+            }
+            
+            .results-table {
+                font-size: 0.9rem;
+            }
+            
+            .results-table th,
+            .results-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Calculadora de Rotas</h1>
+            <p>Faça upload de uma planilha Excel com origem e destino para calcular distâncias e pedágios automaticamente</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 Formato da Planilha</h3>
+            <ul>
+                <li>Arquivo Excel (.xlsx ou .xls)</li>
+                <li>Coluna "origem" com a cidade de origem</li>
+                <li>Coluna "destino" com a cidade de destino</li>
+                <li>Pode incluir o estado (ex: "São Paulo SP", "Rio de Janeiro RJ")</li>
+                <li><strong>Rota sequencial:</strong> Separe por vírgula para criar rota contínua</li>
+                <li>Exemplo: "Rio de Janeiro RJ, Belo Horizonte MG" = São Paulo → Rio → Belo Horizonte</li>
+            </ul>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn" id="download-template-btn" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                    📥 Baixar Modelo de Planilha
+                </button>
+            </div>
+        </div>
+
+        <div class="upload-section" id="upload-area">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Clique aqui ou arraste sua planilha</div>
+            <div class="upload-subtext">Formatos suportados: .xlsx, .xls</div>
+            <input type="file" id="file-input" accept=".xlsx,.xls" />
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" id="upload-btn" disabled>📤 Processar Planilha</button>
+        </div>
+
+        <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div class="results" id="results">
+            <div class="results-header">
+                📊 Resultados do Processamento
+            </div>
+            <table class="results-table" id="results-table">
+                <thead>
+                    <tr>
+                        <th>Origem</th>
+                        <th>Destino</th>
+                        <th>Distância (km)</th>
+                        <th>Pedágios (R$)</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                </tbody>
+            </table>
+            <div style="text-align: center;">
+                <button class="btn download-btn" id="download-btn">💾 Baixar Resultados (CSV)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const messageArea = document.getElementById('message-area');
+        const results = document.getElementById('results');
+        const resultsBody = document.getElementById('results-body');
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadTemplateBtn = document.getElementById('download-template-btn');
+
+        let currentResults = [];
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    uploadBtn.disabled = false;
+                    showMessage(`Arquivo selecionado: ${file.name}`, 'success');
+                } else {
+                    uploadBtn.disabled = true;
+                    showMessage('Por favor, selecione um arquivo Excel (.xlsx ou .xls)', 'error');
+                }
+            }
+        }
+
+        // Upload button click
+        uploadBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage('Por favor, selecione um arquivo primeiro.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('excel_file', file);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Processando...';
+            progressBar.style.display = 'block';
+            
+            // Simular progresso
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+            }, 200);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+
+                if (response.ok) {
+                    currentResults = data.resultados;
+                    displayResults(data.resultados);
+                    showMessage(`✅ Processamento concluído! ${data.resultados.length} rotas calculadas.`, 'success');
+                } else {
+                    showMessage(`❌ Erro: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                showMessage(`❌ Erro de conexão: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '📤 Processar Planilha';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 1000);
+            }
+        });
+
+        function showMessage(message, type) {
+            messageArea.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        function displayResults(resultados) {
+            resultsBody.innerHTML = '';
+            
+            resultados.forEach(resultado => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${resultado.origem}</td>
+                    <td>${resultado.destino}</td>
+                    <td>${typeof resultado.distance === 'number' ? resultado.distance.toLocaleString('pt-BR') : resultado.distance}</td>
+                    <td>${typeof resultado.pedagios === 'number' ? 'R$ ' + resultado.pedagios.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : resultado.pedagios}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+            
+            results.style.display = 'block';
+        }
+
+        // Download template
+        downloadTemplateBtn.addEventListener('click', () => {
+            downloadTemplate();
+        });
+
+        // Download CSV
+        downloadBtn.addEventListener('click', () => {
+            if (currentResults.length === 0) {
+                showMessage('Nenhum resultado para baixar.', 'error');
+                return;
+            }
+
+            const csv = convertToCSV(currentResults);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'resultados_rotas.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+
+        function downloadTemplate() {
+            // Dados de exemplo para o modelo
+            const templateData = [
+                ['origem', 'destino'],
+                ['São Paulo SP', 'Rio de Janeiro RJ'],
+                ['Rio de Janeiro RJ', 'Belo Horizonte MG'],
+                ['Belo Horizonte MG', 'Brasília DF'],
+                ['São Paulo SP', 'Rio de Janeiro RJ, Belo Horizonte MG'],
+                ['Brasília DF', 'Goiânia GO, São Paulo SP']
+            ];
+
+            // Converter para CSV (formato compatível com Excel)
+            const csvContent = templateData.map(row => 
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            // Adicionar BOM para UTF-8
+            const csv = '\ufeff' + csvContent;
+            
+            // Criar e baixar arquivo
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'modelo_planilha_rotas.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showMessage('📥 Modelo de planilha baixado com sucesso! Você pode abrir no Excel e salvar como .xlsx', 'success');
+            }
+        }
+
+        function convertToCSV(data) {
+            const headers = ['Origem', 'Destino', 'Distância (km)', 'Pedágios (R$)'];
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => [
+                    `"${row.origem}"`,
+                    `"${row.destino}"`,
+                    `"${row.distance}"`,
+                    `"${row.pedagios}"`
+                ].join(','))
+            ].join('\n');
+            
+            return '\ufeff' + csvContent; // BOM for UTF-8
+        }
+    </script>
+</body>
+</html> 
