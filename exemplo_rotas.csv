@@ -1,0 +1,9 @@
+origem,destino
+"São Paulo SP","Rio de Janeiro RJ"
+"Rio de Janeiro RJ","Belo Horizonte MG"
+"Belo Horizonte MG","Brasília DF"
+"São Paulo SP","Rio de Janeiro RJ, Belo Horizonte MG"
+"Brasília DF","Goiânia GO, São Paulo SP"
+"Curitiba PR","Porto Alegre RS"
+"Salvador BA","Recife PE"
+"Fortaleza CE","Natal RN" 

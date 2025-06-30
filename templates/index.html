@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Distâncias e Pedágios</title>
+    <title>Calculadora de Rotas - Busca KM</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
             margin: 0;
@@ -13,99 +14,109 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f5f5;
         }
 
-        .container {
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Painel Lateral Esquerdo */
+        .sidebar {
+            width: 350px;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
         }
 
         .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 40px;
         }
 
         .header h1 {
-            color: #333;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
         }
 
         .header p {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        .upload-section {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .upload-section:hover {
-            border-color: #764ba2;
-            background-color: #f8f9ff;
-        }
-
-        .upload-section.dragover {
-            border-color: #764ba2;
-            background-color: #f0f4ff;
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .upload-text {
-            font-size: 1.2rem;
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .upload-subtext {
-            color: #666;
             font-size: 0.9rem;
+            opacity: 0.9;
         }
 
-        #file-input {
-            display: none;
+        .controls {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafafa;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
         }
 
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 10px;
+            width: 100%;
+            margin-bottom: 10px;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn:disabled {
@@ -114,12 +125,52 @@
             transform: none;
         }
 
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+
+        .btn-info:hover {
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background-color: #f0f4ff;
+        }
+
+        #file-input {
+            display: none;
+        }
+
         .progress-bar {
             width: 100%;
-            height: 6px;
+            height: 4px;
             background-color: #e0e0e0;
-            border-radius: 3px;
-            margin: 20px 0;
+            border-radius: 2px;
+            margin: 10px 0;
             overflow: hidden;
             display: none;
         }
@@ -131,225 +182,500 @@
             transition: width 0.3s ease;
         }
 
-        .results {
-            margin-top: 30px;
-            display: none;
-        }
-
-        .results-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 15px 15px 0 0;
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 0 0 15px 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .results-table th,
-        .results-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .results-table th {
-            background-color: #f8f9ff;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .results-table tr:hover {
-            background-color: #f8f9ff;
-        }
-
-        .error {
-            background-color: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #c33;
-        }
-
-        .success {
-            background-color: #efe;
-            color: #393;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #393;
-        }
-
-        .info-box {
-            background-color: #f0f4ff;
-            border: 1px solid #667eea;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .info-box h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .info-box ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .info-box li {
-            margin: 8px 0;
-            padding-left: 20px;
+        /* Mapa */
+        .map-container {
+            flex: 1;
             position: relative;
         }
 
-        .info-box li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
+        #map {
+            height: 100%;
+            width: 100%;
         }
 
-        .download-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            margin-top: 20px;
+        /* Lista de Rotas */
+        .routes-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
         }
 
-        .download-btn:hover {
-            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        .route-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
+        .route-item:hover {
+            background-color: #f8f9ff;
+        }
+
+        .route-item:last-child {
+            border-bottom: none;
+        }
+
+        .route-item.selected {
+            background-color: #e8f0fe;
+            border-left: 4px solid #667eea;
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-cities {
+            font-weight: 500;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .route-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .route-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .route-status.calculated {
+            background-color: #28a745;
+        }
+
+        .route-status.error {
+            background-color: #dc3545;
+        }
+
+        .route-status.pending {
+            background-color: #ffc107;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Responsivo */
         @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
+            .main-container {
+                flex-direction: column;
             }
             
-            .header h1 {
-                font-size: 2rem;
+            .sidebar {
+                width: 100%;
+                height: 50vh;
             }
             
-            .upload-section {
-                padding: 20px;
+            .map-container {
+                height: 50vh;
+            }
+        }
+
+        /* Controles do Mapa */
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .map-btn {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            font-size: 12px;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .map-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Seção de Resultado em Destaque */
+        .result-highlight {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+
+        .result-highlight h3 {
+            color: #28a745;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+            border: 1px solid #e9ecef;
+        }
+
+        .result-route {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .result-route span {
+            font-weight: 600;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex: 1;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-item.distance {
+            border-color: #17a2b8;
+        }
+
+        .stat-item.toll {
+            border-color: #28a745;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-content {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-item.distance .stat-value {
+            color: #17a2b8;
+        }
+
+        .stat-item.toll .stat-value {
+            color: #28a745;
+        }
+
+        .btn-view-map {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-view-map:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        /* Animações para destaque */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2); }
+            50% { box-shadow: 0 6px 25px rgba(40, 167, 69, 0.4); }
+            100% { box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2); }
+        }
+
+        .result-highlight.animated {
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        /* Responsivo - Melhor visualização em mobile */
+        @media (max-width: 768px) {
+            .result-stats {
+                flex-direction: column;
+                gap: 10px;
             }
             
-            .results-table {
-                font-size: 0.9rem;
+            .stat-item {
+                width: 100%;
+                padding: 12px;
             }
             
-            .results-table th,
-            .results-table td {
-                padding: 10px 8px;
+            .stat-value {
+                font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚛 Calculadora de Rotas</h1>
-            <p>Faça upload de uma planilha Excel com origem e destino para calcular distâncias e pedágios automaticamente</p>
-        </div>
-
-        <div class="info-box">
-            <h3>📋 Formato da Planilha</h3>
-            <ul>
-                <li>Arquivo Excel (.xlsx ou .xls)</li>
-                <li>Coluna "origem" com a cidade de origem</li>
-                <li>Coluna "destino" com a cidade de destino</li>
-                <li>Pode incluir o estado (ex: "São Paulo SP", "Rio de Janeiro RJ")</li>
-                <li><strong>Rota sequencial:</strong> Separe por vírgula para criar rota contínua</li>
-                <li>Exemplo: "Rio de Janeiro RJ, Belo Horizonte MG" = São Paulo → Rio → Belo Horizonte</li>
-            </ul>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn" id="download-template-btn" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
-                    📥 Baixar Modelo de Planilha
-                </button>
+    <div class="main-container">
+        <!-- Painel Lateral -->
+        <div class="sidebar">
+            <div class="header">
+                <h1>🚛 Busca KM</h1>
+                <p>Calculadora de Rotas e Pedágios</p>
             </div>
-        </div>
+            
+            <div class="controls">
+                <!-- Seção de Busca Individual -->
+                <div class="section">
+                    <h3>📍 Busca Individual</h3>
+                    <div class="input-group">
+                        <label for="origem">Origem:</label>
+                        <input type="text" id="origem" class="input-field" placeholder="Ex: São Paulo SP">
+                    </div>
+                    <div class="input-group">
+                        <label for="destino">Destino:</label>
+                        <input type="text" id="destino" class="input-field" placeholder="Ex: Rio de Janeiro RJ">
+                    </div>
+                    <button class="btn" id="calcular-btn">🔍 Calcular</button>
+                </div>
 
-        <div class="upload-section" id="upload-area">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Clique aqui ou arraste sua planilha</div>
-            <div class="upload-subtext">Formatos suportados: .xlsx, .xls</div>
-            <input type="file" id="file-input" accept=".xlsx,.xls" />
-        </div>
+                <!-- Seção de Resultado em Destaque -->
+                <div class="section result-highlight" id="result-section" style="display: none;">
+                    <h3>🎯 Resultado da Busca</h3>
+                    <div class="result-card">
+                        <div class="result-route">
+                            <span id="result-route-text">São Paulo SP → Rio de Janeiro RJ</span>
+                        </div>
+                        <div class="result-stats">
+                            <div class="stat-item distance">
+                                <div class="stat-icon">📏</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Distância</div>
+                                    <div class="stat-value" id="result-distance">430,8 km</div>
+                                </div>
+                            </div>
+                            <div class="stat-item toll">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Pedágios</div>
+                                    <div class="stat-value" id="result-toll">R$ 52,20</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-view-map" id="view-map-btn">🗺️ Ver no Mapa</button>
+                    </div>
+                </div>
 
-        <div style="text-align: center;">
-            <button class="btn" id="upload-btn" disabled>📤 Processar Planilha</button>
-        </div>
+                <!-- Seção de Upload -->
+                <div class="section">
+                    <h3>📊 Upload de Planilha</h3>
+                    <div class="upload-area" id="upload-area">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
+                        <div style="font-size: 13px; font-weight: 500;">Clique ou arraste sua planilha</div>
+                        <div style="font-size: 11px; color: #666;">Formatos: .xlsx, .xls</div>
+                        <input type="file" id="file-input" accept=".xlsx,.xls" />
+                    </div>
+                    <button class="btn" id="upload-btn" disabled>📤 Processar Planilha</button>
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
 
-        <div class="progress-bar" id="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
-        </div>
+                <!-- Seção de Downloads -->
+                <div class="section">
+                    <h3>💾 Downloads</h3>
+                    <button class="btn btn-info" id="download-template-btn">📥 Modelo de Planilha</button>
+                    <button class="btn btn-secondary" id="download-csv-btn" disabled>📊 Baixar CSV</button>
+                </div>
 
-        <div id="message-area"></div>
-
-        <div class="results" id="results">
-            <div class="results-header">
-                📊 Resultados do Processamento
+                <!-- Lista de Rotas -->
+                <div class="section">
+                    <h3>🗺️ Rotas Calculadas</h3>
+                    <div class="routes-list" id="routes-list">
+                        <div class="empty-state">
+                            Nenhuma rota calculada ainda
+                        </div>
+                    </div>
+                </div>
             </div>
-            <table class="results-table" id="results-table">
-                <thead>
-                    <tr>
-                        <th>Origem</th>
-                        <th>Destino</th>
-                        <th>Distância (km)</th>
-                        <th>Pedágios (R$)</th>
-                    </tr>
-                </thead>
-                <tbody id="results-body">
-                </tbody>
-            </table>
-            <div style="text-align: center;">
-                <button class="btn download-btn" id="download-btn">💾 Baixar Resultados (CSV)</button>
+
+            <div id="message-area"></div>
+        </div>
+
+        <!-- Mapa -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button class="map-btn" id="center-map-btn" title="Centralizar no Brasil">🇧🇷</button>
+                <button class="map-btn" id="clear-map-btn" title="Limpar Rotas">🗑️</button>
             </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Variáveis globais
+        let map;
+        let routesData = [];
+        let routeMarkers = [];
+        let routePolylines = [];
+        let selectedRouteIndex = -1;
+
+        // Inicializar mapa
+        function initMap() {
+            map = L.map('map').setView([-14.235, -51.925], 4); // Centro do Brasil
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Elementos DOM
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
         const uploadBtn = document.getElementById('upload-btn');
         const progressBar = document.getElementById('progress-bar');
         const progressFill = document.getElementById('progress-fill');
         const messageArea = document.getElementById('message-area');
-        const results = document.getElementById('results');
-        const resultsBody = document.getElementById('results-body');
-        const downloadBtn = document.getElementById('download-btn');
+        const routesList = document.getElementById('routes-list');
+        const downloadCsvBtn = document.getElementById('download-csv-btn');
         const downloadTemplateBtn = document.getElementById('download-template-btn');
+        const calcularBtn = document.getElementById('calcular-btn');
+        const origemInput = document.getElementById('origem');
+        const destinoInput = document.getElementById('destino');
+        const centerMapBtn = document.getElementById('center-map-btn');
+        const clearMapBtn = document.getElementById('clear-map-btn');
+        const resultSection = document.getElementById('result-section');
+        const resultRouteText = document.getElementById('result-route-text');
+        const resultDistance = document.getElementById('result-distance');
+        const resultToll = document.getElementById('result-toll');
+        const viewMapBtn = document.getElementById('view-map-btn');
 
-        let currentResults = [];
-
-        // Upload area click
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            setupEventListeners();
         });
 
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
+        function setupEventListeners() {
+            // Upload area
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            
+            // File input
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Buttons
+            uploadBtn.addEventListener('click', processFile);
+            calcularBtn.addEventListener('click', calculateSingleRoute);
+            downloadCsvBtn.addEventListener('click', downloadCSV);
+            downloadTemplateBtn.addEventListener('click', downloadTemplate);
+            centerMapBtn.addEventListener('click', centerMap);
+            clearMapBtn.addEventListener('click', clearMap);
+            viewMapBtn.addEventListener('click', showResultOnMap);
+
+            // Enter key para busca individual
+            origemInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') calculateSingleRoute();
+            });
+            destinoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') calculateSingleRoute();
+            });
+        }
+
+        // Drag and Drop
+        function handleDragOver(e) {
             e.preventDefault();
             uploadArea.classList.add('dragover');
-        });
+        }
 
-        uploadArea.addEventListener('dragleave', () => {
+        function handleDragLeave() {
             uploadArea.classList.remove('dragover');
-        });
+        }
 
-        uploadArea.addEventListener('drop', (e) => {
+        function handleDrop(e) {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             
@@ -358,11 +684,9 @@
                 fileInput.files = files;
                 handleFileSelect();
             }
-        });
+        }
 
-        // File input change
-        fileInput.addEventListener('change', handleFileSelect);
-
+        // File selection
         function handleFileSelect() {
             const file = fileInput.files[0];
             if (file) {
@@ -376,8 +700,94 @@
             }
         }
 
-        // Upload button click
-        uploadBtn.addEventListener('click', async () => {
+        // Calcular rota individual
+        async function calculateSingleRoute() {
+            const origem = origemInput.value.trim();
+            const destino = destinoInput.value.trim();
+
+            if (!origem || !destino) {
+                showMessage('Por favor, preencha origem e destino', 'error');
+                return;
+            }
+
+            calcularBtn.disabled = true;
+            calcularBtn.textContent = '⏳ Calculando...';
+
+            try {
+                const response = await fetch('/calculate_route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        origem: origem,
+                        destino: destino
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const routeData = {
+                        origem: origem,
+                        destino: destino,
+                        distance: data.distance,
+                        pedagios: data.pedagios,
+                        status: 'calculated'
+                    };
+                    
+                    routesData.unshift(routeData); // Adiciona no início
+                    updateRoutesList();
+                    
+                    // Atualizar seção de resultado
+                    resultRouteText.textContent = `${origem} → ${destino}`;
+                    resultDistance.textContent = `${data.distance.toLocaleString('pt-BR')} km`;
+                    resultToll.textContent = `R$ ${data.pedagios.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                    
+                    // Mostrar resultado com animação
+                    resultSection.style.display = 'block';
+                    resultSection.style.opacity = '0';
+                    resultSection.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        resultSection.style.transition = 'all 0.5s ease';
+                        resultSection.style.opacity = '1';
+                        resultSection.style.transform = 'translateY(0)';
+                        
+                        // Scroll suave para o resultado
+                        resultSection.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'nearest' 
+                        });
+                        
+                        // Efeito de pulsação para chamar atenção
+                        resultSection.style.animation = 'pulse 2s ease-in-out';
+                        resultSection.classList.add('animated');
+                        
+                        // Remover animação após alguns segundos
+                        setTimeout(() => {
+                            resultSection.classList.remove('animated');
+                        }, 6000);
+                        
+                        // Limpar campos após mostrar resultado
+                        origemInput.value = '';
+                        destinoInput.value = '';
+                    }, 100);
+                    
+                    showMessage('✅ Rota calculada! Veja o resultado em destaque acima.', 'success');
+                } else {
+                    showMessage(`❌ Erro: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Erro de conexão: ${error.message}`, 'error');
+            } finally {
+                calcularBtn.disabled = false;
+                calcularBtn.textContent = '🔍 Calcular';
+            }
+        }
+
+        // Processar arquivo
+        async function processFile() {
             const file = fileInput.files[0];
             if (!file) {
                 showMessage('Por favor, selecione um arquivo primeiro.', 'error');
@@ -411,8 +821,9 @@
                 progressFill.style.width = '100%';
 
                 if (response.ok) {
-                    currentResults = data.resultados;
-                    displayResults(data.resultados);
+                    routesData = data.resultados.map(r => ({...r, status: 'calculated'}));
+                    updateRoutesList();
+                    downloadCsvBtn.disabled = false;
                     showMessage(`✅ Processamento concluído! ${data.resultados.length} rotas calculadas.`, 'success');
                 } else {
                     showMessage(`❌ Erro: ${data.error}`, 'error');
@@ -428,45 +839,129 @@
                     progressFill.style.width = '0%';
                 }, 1000);
             }
-        });
-
-        function showMessage(message, type) {
-            messageArea.innerHTML = `<div class="${type}">${message}</div>`;
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 5000);
         }
 
-        function displayResults(resultados) {
-            resultsBody.innerHTML = '';
+        // Atualizar lista de rotas
+        function updateRoutesList() {
+            if (routesData.length === 0) {
+                routesList.innerHTML = '<div class="empty-state">Nenhuma rota calculada ainda</div>';
+                return;
+            }
+
+            routesList.innerHTML = '';
             
-            resultados.forEach(resultado => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${resultado.origem}</td>
-                    <td>${resultado.destino}</td>
-                    <td>${typeof resultado.distance === 'number' ? resultado.distance.toLocaleString('pt-BR') : resultado.distance}</td>
-                    <td>${typeof resultado.pedagios === 'number' ? 'R$ ' + resultado.pedagios.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : resultado.pedagios}</td>
+            routesData.forEach((route, index) => {
+                const routeItem = document.createElement('div');
+                routeItem.className = 'route-item';
+                routeItem.onclick = () => selectRoute(index);
+                
+                routeItem.innerHTML = `
+                    <div class="route-info">
+                        <div class="route-cities">${route.origem} → ${route.destino}</div>
+                        <div class="route-details">
+                            ${typeof route.distance === 'number' ? route.distance.toLocaleString('pt-BR') + ' km' : route.distance} | 
+                            ${typeof route.pedagios === 'number' ? 'R$ ' + route.pedagios.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : route.pedagios}
+                        </div>
+                    </div>
+                    <div class="route-status ${route.status}"></div>
                 `;
-                resultsBody.appendChild(row);
+                
+                routesList.appendChild(routeItem);
+            });
+        }
+
+        // Selecionar rota
+        function selectRoute(index) {
+            // Remove seleção anterior
+            document.querySelectorAll('.route-item').forEach(item => {
+                item.classList.remove('selected');
             });
             
-            results.style.display = 'block';
+            // Adiciona nova seleção
+            document.querySelectorAll('.route-item')[index].classList.add('selected');
+            selectedRouteIndex = index;
+            
+            // Mostrar rota no mapa (simulado)
+            showRouteOnMap(routesData[index]);
         }
 
-        // Download template
-        downloadTemplateBtn.addEventListener('click', () => {
-            downloadTemplate();
-        });
+        // Mostrar rota no mapa (simulação)
+        function showRouteOnMap(route) {
+            clearMap();
+            
+            // Coordenadas aproximadas de algumas cidades (para demonstração)
+            const cityCoords = {
+                'São Paulo': [-23.5505, -46.6333],
+                'Rio de Janeiro': [-22.9068, -43.1729],
+                'Belo Horizonte': [-19.9167, -43.9345],
+                'Brasília': [-15.7942, -47.8822],
+                'Salvador': [-12.9714, -38.5014],
+                'Fortaleza': [-3.7319, -38.5267],
+                'Recife': [-8.0476, -34.8770],
+                'Porto Alegre': [-30.0346, -51.2177],
+                'Curitiba': [-25.4284, -49.2733]
+            };
+
+            // Tentar encontrar coordenadas aproximadas
+            let origemCoords = null;
+            let destinoCoords = null;
+
+            for (let city in cityCoords) {
+                if (route.origem.toLowerCase().includes(city.toLowerCase())) {
+                    origemCoords = cityCoords[city];
+                }
+                if (route.destino.toLowerCase().includes(city.toLowerCase())) {
+                    destinoCoords = cityCoords[city];
+                }
+            }
+
+            if (origemCoords && destinoCoords) {
+                // Adicionar marcadores
+                const origemMarker = L.marker(origemCoords).addTo(map)
+                    .bindPopup(`<b>Origem:</b> ${route.origem}`);
+                
+                const destinoMarker = L.marker(destinoCoords).addTo(map)
+                    .bindPopup(`<b>Destino:</b> ${route.destino}`);
+
+                // Adicionar linha da rota
+                const routeLine = L.polyline([origemCoords, destinoCoords], {
+                    color: '#667eea',
+                    weight: 4,
+                    opacity: 0.7
+                }).addTo(map);
+
+                routeMarkers.push(origemMarker, destinoMarker);
+                routePolylines.push(routeLine);
+
+                // Ajustar zoom para mostrar toda a rota
+                const group = new L.featureGroup([origemMarker, destinoMarker, routeLine]);
+                map.fitBounds(group.getBounds().pad(0.1));
+            } else {
+                showMessage('Coordenadas não encontradas para esta rota', 'info');
+            }
+        }
+
+        // Centralizar mapa
+        function centerMap() {
+            map.setView([-14.235, -51.925], 4);
+        }
+
+        // Limpar mapa
+        function clearMap() {
+            routeMarkers.forEach(marker => map.removeLayer(marker));
+            routePolylines.forEach(polyline => map.removeLayer(polyline));
+            routeMarkers = [];
+            routePolylines = [];
+        }
 
         // Download CSV
-        downloadBtn.addEventListener('click', () => {
-            if (currentResults.length === 0) {
+        function downloadCSV() {
+            if (routesData.length === 0) {
                 showMessage('Nenhum resultado para baixar.', 'error');
                 return;
             }
 
-            const csv = convertToCSV(currentResults);
+            const csv = convertToCSV(routesData);
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             
@@ -478,11 +973,12 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                showMessage('📊 CSV baixado com sucesso!', 'success');
             }
-        });
+        }
 
+        // Download template
         function downloadTemplate() {
-            // Dados de exemplo para o modelo
             const templateData = [
                 ['origem', 'destino'],
                 ['São Paulo SP', 'Rio de Janeiro RJ'],
@@ -492,15 +988,11 @@
                 ['Brasília DF', 'Goiânia GO, São Paulo SP']
             ];
 
-            // Converter para CSV (formato compatível com Excel)
             const csvContent = templateData.map(row => 
                 row.map(cell => `"${cell}"`).join(',')
             ).join('\n');
 
-            // Adicionar BOM para UTF-8
             const csv = '\ufeff' + csvContent;
-            
-            // Criar e baixar arquivo
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             
@@ -512,11 +1004,11 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
-                showMessage('📥 Modelo de planilha baixado com sucesso! Você pode abrir no Excel e salvar como .xlsx', 'success');
+                showMessage('📥 Modelo de planilha baixado com sucesso!', 'success');
             }
         }
 
+        // Converter para CSV
         function convertToCSV(data) {
             const headers = ['Origem', 'Destino', 'Distância (km)', 'Pedágios (R$)'];
             const csvContent = [
@@ -529,7 +1021,24 @@
                 ].join(','))
             ].join('\n');
             
-            return '\ufeff' + csvContent; // BOM for UTF-8
+            return '\ufeff' + csvContent;
+        }
+
+        // Mostrar mensagem
+        function showMessage(message, type) {
+            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        // Mostrar resultado da busca no mapa
+        function showResultOnMap() {
+            if (selectedRouteIndex !== -1) {
+                showRouteOnMap(routesData[selectedRouteIndex]);
+            } else {
+                showMessage('Por favor, selecione uma rota antes de visualizar no mapa', 'error');
+            }
         }
     </script>
 </body>

@@ -348,6 +348,34 @@ async def upload_excel():
         print(f"Erro geral no upload: {e}")
         return jsonify({'error': f'Erro ao processar arquivo: {str(e)}'}), 500
 
+@app.route('/calculate_route', methods=['POST'])
+async def calculate_route():
+    """Calcula uma rota individual"""
+    try:
+        data = await request.get_json()
+        
+        if not data or 'origem' not in data or 'destino' not in data:
+            return jsonify({'error': 'Origem e destino são obrigatórios'}), 400
+        
+        origem = str(data['origem']).strip()
+        destino = str(data['destino']).strip()
+        
+        if not origem or not destino:
+            return jsonify({'error': 'Origem e destino não podem estar vazios'}), 400
+        
+        # Processar a rota
+        resultado = await processar_rota(origem, destino)
+        
+        # Retornar apenas distância e pedágios
+        return jsonify({
+            "distance": resultado["distance"],
+            "pedagios": resultado["pedagios"]
+        })
+        
+    except Exception as e:
+        print(f"Erro ao calcular rota individual: {e}")
+        return jsonify({'error': f'Erro ao calcular rota: {str(e)}'}), 500
+
 @app.route('/km/<path:cidades>', methods=['GET'])
 async def home(cidades):
     lista_cidades = cidades.split("/")
