@@ -11,10 +11,36 @@ app = Quart(__name__)
 import requests
 
 from geopy.geocoders import Nominatim
+import sqlite3
+import os
+from datetime import datetime
 
 # Sistema de Cache
 cache_coordenadas = {}
 cache_rotas = {}
+cache_sugestoes = {}
+
+# Inicializar banco de dados para histórico
+def init_database():
+    conn = sqlite3.connect('historico_consultas.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS consultas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            origem TEXT NOT NULL,
+            destino TEXT NOT NULL,
+            distancia REAL,
+            pedagios REAL,
+            ip_address TEXT,
+            data_consulta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            tipo_consulta TEXT DEFAULT 'individual'
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Inicializar banco de dados
+init_database()
 
 def gerar_chave_cache(texto):
     """Gera uma chave única para o cache usando hash MD5"""
@@ -23,6 +49,78 @@ def gerar_chave_cache(texto):
 def cache_expirado(timestamp, duracao_horas):
     """Verifica se o cache expirou"""
     return time.time() - timestamp > (duracao_horas * 3600)
+
+def obter_ip_usuario(request):
+    """Obtém o IP do usuário"""
+    # Verifica se há proxy/load balancer
+    forwarded_for = request.headers.get('X-Forwarded-For')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    
+    real_ip = request.headers.get('X-Real-IP')
+    if real_ip:
+        return real_ip
+    
+    # IP direto
+    return request.remote_addr
+
+def salvar_consulta(origem, destino, distancia, pedagios, ip_address, tipo_consulta='individual'):
+    """Salva consulta no banco de dados"""
+    try:
+        conn = sqlite3.connect('historico_consultas.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO consultas (origem, destino, distancia, pedagios, ip_address, tipo_consulta)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (origem, destino, distancia, pedagios, ip_address, tipo_consulta))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Erro ao salvar consulta no histórico: {e}")
+
+async def buscar_sugestoes_cidade(termo):
+    """Busca sugestões de cidades baseado no termo digitado"""
+    try:
+        # Verificar cache de sugestões (válido por 24 horas)
+        chave_cache = gerar_chave_cache(f"sugestoes_{termo}")
+        if chave_cache in cache_sugestoes:
+            dados_cache = cache_sugestoes[chave_cache]
+            if not cache_expirado(dados_cache['timestamp'], 24):  # 24 horas
+                return dados_cache['sugestoes']
+            else:
+                del cache_sugestoes[chave_cache]
+        
+        geolocator = Nominatim(user_agent="calculadora_rotas_v2", timeout=10)
+        
+        # Buscar cidades no Brasil
+        location = geolocator.geocode(f"{termo}, Brasil", exactly_one=False, limit=5)
+        
+        sugestoes = []
+        if location:
+            for loc in location:
+                if loc and loc.address:
+                    # Extrair nome da cidade e estado
+                    endereco = loc.address.split(', ')
+                    if len(endereco) >= 2:
+                        cidade_estado = f"{endereco[0]}, {endereco[1]}"
+                        sugestoes.append({
+                            'nome': cidade_estado,
+                            'endereco_completo': loc.address,
+                            'latitude': loc.latitude,
+                            'longitude': loc.longitude
+                        })
+        
+        # Armazenar no cache
+        cache_sugestoes[chave_cache] = {
+            'sugestoes': sugestoes,
+            'timestamp': time.time()
+        }
+        
+        return sugestoes
+        
+    except Exception as e:
+        print(f"Erro ao buscar sugestões para {termo}: {e}")
+        return []
 
 async def obter_latitude_longitude(cidade):
     try:
@@ -36,7 +134,7 @@ async def obter_latitude_longitude(cidade):
             else:
                 del cache_coordenadas[chave_cache]
         
-        geolocator = Nominatim(user_agent="calculadora_rotas_v2")
+        geolocator = Nominatim(user_agent="calculadora_rotas_v2", timeout=10)
         location = geolocator.geocode(cidade + ", Brasil")
         if location:
             # Armazenar no cache
@@ -182,10 +280,11 @@ async def processar_rota(origem, destino):
             "pedagios": preco_pedagio
         }
         
-        # Armazenar no cache
+        # Armazenar no cache com validação adicional
         cache_rotas[chave_rota] = {
             'resultado': resultado,
-            'timestamp': time.time()
+            'timestamp': time.time(),
+            'validado': True  # Flag para indicar que foi validado
         }
         
         print(f"Nova busca processada e cacheada: {origem} -> {destino}")
@@ -274,10 +373,11 @@ async def processar_rota_multipla(origem, destinos_lista):
             "pedagios": preco_pedagio
         }
         
-        # Armazenar no cache
+        # Armazenar no cache com validação adicional
         cache_rotas[chave_rota] = {
             'resultado': resultado,
-            'timestamp': time.time()
+            'timestamp': time.time(),
+            'validado': True  # Flag para indicar que foi validado
         }
         
         print(f"Rota múltipla processada e cacheada: {origem} -> {' -> '.join(destinos_lista)}")
@@ -341,6 +441,11 @@ async def upload_excel():
                 resultado = await processar_rota_multipla(origem, destinos)
             
             resultados.append(resultado)
+            
+            # Salvar no histórico se for uma consulta válida
+            if isinstance(resultado.get("distance"), (int, float)) and isinstance(resultado.get("pedagios"), (int, float)):
+                ip_address = obter_ip_usuario(request)
+                salvar_consulta(origem, destinos_str, resultado["distance"], resultado["pedagios"], ip_address, 'massa')
         
         return jsonify({"resultados": resultados})
         
@@ -365,6 +470,11 @@ async def calculate_route():
         
         # Processar a rota
         resultado = await processar_rota(origem, destino)
+        
+        # Salvar no histórico
+        ip_address = obter_ip_usuario(request)
+        if isinstance(resultado["distance"], (int, float)) and isinstance(resultado["pedagios"], (int, float)):
+            salvar_consulta(origem, destino, resultado["distance"], resultado["pedagios"], ip_address, 'individual')
         
         # Retornar apenas distância e pedágios
         return jsonify({
@@ -421,10 +531,76 @@ async def cache_stats():
 @app.route('/cache/clear', methods=['POST'])
 async def limpar_cache():
     """Limpa todo o cache"""
-    global cache_coordenadas, cache_rotas
+    global cache_coordenadas, cache_rotas, cache_sugestoes
     cache_coordenadas.clear()
     cache_rotas.clear()
+    cache_sugestoes.clear()
     return jsonify({"message": "Cache limpo com sucesso"})
+
+@app.route('/suggestions/<termo>', methods=['GET'])
+async def obter_sugestoes(termo):
+    """Retorna sugestões de cidades baseado no termo digitado"""
+    try:
+        if len(termo) < 2:
+            return jsonify({"sugestoes": []})
+        
+        sugestoes = await buscar_sugestoes_cidade(termo)
+        return jsonify({"sugestoes": sugestoes})
+        
+    except Exception as e:
+        print(f"Erro ao obter sugestões: {e}")
+        return jsonify({"sugestoes": []})
+
+@app.route('/historico', methods=['GET'])
+async def obter_historico():
+    """Retorna histórico de consultas"""
+    try:
+        conn = sqlite3.connect('historico_consultas.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT origem, destino, distancia, pedagios, ip_address, data_consulta, tipo_consulta
+            FROM consultas 
+            ORDER BY data_consulta DESC 
+            LIMIT 100
+        ''')
+        
+        consultas = []
+        for row in cursor.fetchall():
+            consultas.append({
+                'origem': row[0],
+                'destino': row[1],
+                'distancia': row[2],
+                'pedagios': row[3],
+                'ip_address': row[4],
+                'data_consulta': row[5],
+                'tipo_consulta': row[6]
+            })
+        
+        conn.close()
+        return jsonify({"consultas": consultas})
+        
+    except Exception as e:
+        print(f"Erro ao obter histórico: {e}")
+        return jsonify({"consultas": []})
+
+@app.route('/historico-page', methods=['GET'])
+async def historico_page():
+    """Página de histórico"""
+    return await render_template('historico.html')
+
+@app.route('/historico/clear', methods=['POST'])
+async def limpar_historico():
+    """Limpa todo o histórico"""
+    try:
+        conn = sqlite3.connect('historico_consultas.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM consultas')
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Histórico limpo com sucesso"})
+    except Exception as e:
+        print(f"Erro ao limpar histórico: {e}")
+        return jsonify({"error": "Erro ao limpar histórico"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

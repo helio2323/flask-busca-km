@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Consultas - Busca KM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1e7e34;
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #1e7e34;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #155724;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 126, 52, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-card h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e7e34;
+        }
+
+        .history-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table-header h3 {
+            color: #333;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .history-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .history-table .origem {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-table .destino {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-table .distancia {
+            color: #17a2b8;
+            font-weight: 600;
+        }
+
+        .history-table .pedagios {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .history-table .ip {
+            font-family: monospace;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .history-table .data {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .history-table .tipo {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .history-table .tipo.individual {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .history-table .tipo.massa {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .history-table {
+                font-size: 12px;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🚛 Busca KM</h1>
+                <p>Histórico de Consultas</p>
+            </div>
+            <a href="/" class="back-btn">← Voltar para Calculadora</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">📊 Histórico de Consultas</h1>
+        <p class="page-subtitle">Visualize todas as consultas de rotas realizadas no sistema</p>
+
+        <div class="controls">
+            <button class="btn" id="refresh-history-btn">
+                🔄 Atualizar
+            </button>
+            <button class="btn btn-secondary" id="clear-history-btn">
+                🗑️ Limpar Histórico
+            </button>
+            <a href="/" class="btn btn-secondary">
+                🏠 Página Inicial
+            </a>
+        </div>
+
+        <div class="stats-cards" id="stats-cards">
+            <div class="stat-card">
+                <h3>Total de Consultas</h3>
+                <div class="stat-value" id="total-consultas">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Consultas Individuais</h3>
+                <div class="stat-value" id="consultas-individuais">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Consultas em Massa</h3>
+                <div class="stat-value" id="consultas-massa">-</div>
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div class="history-table-container">
+            <div class="table-header">
+                <h3>📋 Lista de Consultas</h3>
+            </div>
+            <div id="history-content">
+                <div class="loading">Carregando histórico...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const refreshHistoryBtn = document.getElementById('refresh-history-btn');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const historyContent = document.getElementById('history-content');
+        const messageArea = document.getElementById('message-area');
+        const totalConsultas = document.getElementById('total-consultas');
+        const consultasIndividuais = document.getElementById('consultas-individuais');
+        const consultasMassa = document.getElementById('consultas-massa');
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            refreshHistoryBtn.addEventListener('click', loadHistory);
+            clearHistoryBtn.addEventListener('click', clearHistory);
+        }
+
+        // Carregar histórico
+        async function loadHistory() {
+            try {
+                refreshHistoryBtn.disabled = true;
+                refreshHistoryBtn.textContent = '⏳ Carregando...';
+                
+                const response = await fetch('/historico');
+                const data = await response.json();
+                
+                if (data.consultas && data.consultas.length > 0) {
+                    displayHistory(data.consultas);
+                    updateStats(data.consultas);
+                } else {
+                    historyContent.innerHTML = '<div class="empty-state">Nenhuma consulta encontrada no histórico</div>';
+                    updateStats([]);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                historyContent.innerHTML = '<div class="empty-state">Erro ao carregar histórico</div>';
+                showMessage('❌ Erro ao carregar histórico', 'error');
+            } finally {
+                refreshHistoryBtn.disabled = false;
+                refreshHistoryBtn.textContent = '🔄 Atualizar';
+            }
+        }
+
+        // Exibir histórico
+        function displayHistory(consultas) {
+            const table = document.createElement('table');
+            table.className = 'history-table';
+            
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Origem</th>
+                        <th>Destino</th>
+                        <th>Distância</th>
+                        <th>Pedágios</th>
+                        <th>IP</th>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${consultas.map(consulta => `
+                        <tr>
+                            <td class="origem">${consulta.origem}</td>
+                            <td class="destino">${consulta.destino}</td>
+                            <td class="distancia">${typeof consulta.distancia === 'number' ? consulta.distancia.toLocaleString('pt-BR') + ' km' : consulta.distancia}</td>
+                            <td class="pedagios">${typeof consulta.pedagios === 'number' ? 'R$ ' + consulta.pedagios.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : consulta.pedagios}</td>
+                            <td class="ip">${consulta.ip_address || 'N/A'}</td>
+                            <td class="data">${new Date(consulta.data_consulta).toLocaleString('pt-BR')}</td>
+                            <td class="tipo ${consulta.tipo_consulta}">${consulta.tipo_consulta}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            historyContent.innerHTML = '';
+            historyContent.appendChild(table);
+        }
+
+        // Atualizar estatísticas
+        function updateStats(consultas) {
+            const total = consultas.length;
+            const individuais = consultas.filter(c => c.tipo_consulta === 'individual').length;
+            const massa = consultas.filter(c => c.tipo_consulta === 'massa').length;
+
+            totalConsultas.textContent = total.toLocaleString('pt-BR');
+            consultasIndividuais.textContent = individuais.toLocaleString('pt-BR');
+            consultasMassa.textContent = massa.toLocaleString('pt-BR');
+        }
+
+        // Limpar histórico
+        async function clearHistory() {
+            if (!confirm('Tem certeza que deseja limpar todo o histórico? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+
+            try {
+                clearHistoryBtn.disabled = true;
+                clearHistoryBtn.textContent = '⏳ Limpando...';
+
+                const response = await fetch('/historico/clear', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Histórico limpo com sucesso!', 'success');
+                    loadHistory();
+                } else {
+                    showMessage('❌ Erro ao limpar histórico', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao limpar histórico:', error);
+                showMessage('❌ Erro ao limpar histórico', 'error');
+            } finally {
+                clearHistoryBtn.disabled = false;
+                clearHistoryBtn.textContent = '🗑️ Limpar Histórico';
+            }
+        }
+
+        // Mostrar mensagem
+        function showMessage(message, type) {
+            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

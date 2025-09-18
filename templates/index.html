@@ -13,10 +13,17 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             height: 100vh;
             overflow: hidden;
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+            overflow: hidden;
         }
 
         .main-container {
@@ -24,45 +31,53 @@
             height: 100vh;
         }
 
-        /* Painel Lateral Esquerdo */
+
+        /* Painel Lateral Esquerdo - Inspirado no Rotas Brasil */
         .sidebar {
-            width: 350px;
-            background: white;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            width: 380px;
+            background: #1e7e34;
             display: flex;
             flex-direction: column;
             z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.15);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e7e34;
             color: white;
-            padding: 20px;
+            padding: 25px 20px;
             text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .header h1 {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         .header p {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             opacity: 0.9;
+            font-weight: 400;
         }
 
         .controls {
             flex: 1;
-            padding: 20px;
+            padding: 25px 20px;
             overflow-y: auto;
+            background: white;
+            max-height: calc(100vh - 120px);
         }
 
         .section {
             margin-bottom: 25px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            background: #fafafa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .section h3 {
@@ -87,36 +102,155 @@
 
         .input-field {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
+            padding: 15px 16px;
+            border: 2px solid #e9ecef;
             border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
         }
 
         .input-field:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+            border-color: #1e7e34;
+            box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .input-field::placeholder {
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #1e7e34;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(30, 126, 52, 0.15);
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(2px);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-icon {
+            color: #1e7e34;
+            font-size: 16px;
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .suggestion-address {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* Linha conectora entre origem e destino */
+        .connection-line {
+            position: relative;
+            height: 20px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .connection-dots {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            background-color: #1e7e34;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .swap-btn {
+            position: absolute;
+            right: 0;
+            background: #1e7e34;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(30, 126, 52, 0.2);
+        }
+
+        .swap-btn:hover {
+            background: #155724;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 126, 52, 0.3);
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e7e34;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 15px 24px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(30, 126, 52, 0.2);
         }
 
         .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            background: #155724;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 126, 52, 0.3);
         }
 
         .btn:disabled {
@@ -439,6 +573,82 @@
             color: #28a745;
         }
 
+        /* Estilos para histórico */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-table tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .history-table .origem {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .history-table .destino {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .history-table .distancia {
+            color: #17a2b8;
+            font-weight: 600;
+        }
+
+        .history-table .pedagios {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .history-table .ip {
+            font-family: monospace;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .history-table .data {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .history-table .tipo {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .history-table .tipo.individual {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .history-table .tipo.massa {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
         .btn-view-map {
             background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
             color: white;
@@ -504,17 +714,39 @@
                 <p>Calculadora de Rotas e Pedágios</p>
             </div>
             
+            <!-- Conteúdo Principal -->
             <div class="controls">
                 <!-- Seção de Busca Individual -->
                 <div class="section">
                     <h3>📍 Busca Individual</h3>
                     <div class="input-group">
                         <label for="origem">Origem:</label>
-                        <input type="text" id="origem" class="input-field" placeholder="Ex: São Paulo SP">
+                        <div class="autocomplete-container">
+                            <input type="text" id="origem" class="input-field" placeholder="Ex: São Paulo SP" autocomplete="off">
+                            <div id="origem-suggestions" class="autocomplete-suggestions" style="display: none;"></div>
+                        </div>
                     </div>
+                    
+                    <!-- Linha conectora -->
+                    <div class="connection-line">
+                        <div class="connection-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <button type="button" class="swap-btn" onclick="swapCities()" title="Trocar origem e destino">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
                     <div class="input-group">
                         <label for="destino">Destino:</label>
-                        <input type="text" id="destino" class="input-field" placeholder="Ex: Rio de Janeiro RJ">
+                        <div class="autocomplete-container">
+                            <input type="text" id="destino" class="input-field" placeholder="Ex: Rio de Janeiro RJ" autocomplete="off">
+                            <div id="destino-suggestions" class="autocomplete-suggestions" style="display: none;"></div>
+                        </div>
                     </div>
                     <button class="btn" id="calcular-btn">🔍 Calcular</button>
                 </div>
@@ -568,6 +800,14 @@
                     <button class="btn btn-secondary" id="download-csv-btn" disabled>📊 Baixar CSV</button>
                 </div>
 
+                <!-- Seção de Histórico -->
+                <div class="section">
+                    <h3>📊 Histórico</h3>
+                    <a href="/historico-page" class="btn" style="text-decoration: none; display: block; text-align: center;">
+                        📈 Ver Histórico Completo
+                    </a>
+                </div>
+
                 <!-- Lista de Rotas -->
                 <div class="section">
                     <h3>🗺️ Rotas Calculadas</h3>
@@ -600,6 +840,7 @@
         let routeMarkers = [];
         let routePolylines = [];
         let selectedRouteIndex = -1;
+        let autocompleteTimeout = null;
 
         // Inicializar mapa
         function initMap() {
@@ -663,6 +904,17 @@
             destinoInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') calculateSingleRoute();
             });
+
+            // Autocomplete para origem
+            origemInput.addEventListener('input', (e) => {
+                handleAutocomplete(e.target, 'origem-suggestions');
+            });
+
+            // Autocomplete para destino
+            destinoInput.addEventListener('input', (e) => {
+                handleAutocomplete(e.target, 'destino-suggestions');
+            });
+
         }
 
         // Drag and Drop
@@ -754,11 +1006,11 @@
                         resultSection.style.opacity = '1';
                         resultSection.style.transform = 'translateY(0)';
                         
-                        // Scroll suave para o resultado
-                        resultSection.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'nearest' 
-                        });
+                        // Não fazer scroll automático para evitar bug
+                        // resultSection.scrollIntoView({ 
+                        //     behavior: 'smooth', 
+                        //     block: 'nearest' 
+                        // });
                         
                         // Efeito de pulsação para chamar atenção
                         resultSection.style.animation = 'pulse 2s ease-in-out';
@@ -1039,6 +1291,92 @@
             } else {
                 showMessage('Por favor, selecione uma rota antes de visualizar no mapa', 'error');
             }
+        }
+
+
+        // Função para autocomplete
+        async function handleAutocomplete(input, suggestionsId) {
+            const termo = input.value.trim();
+            const suggestionsDiv = document.getElementById(suggestionsId);
+            
+            // Limpar timeout anterior
+            if (autocompleteTimeout) {
+                clearTimeout(autocompleteTimeout);
+            }
+            
+            // Se o termo for muito curto, esconder sugestões
+            if (termo.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Aguardar 300ms antes de fazer a requisição
+            autocompleteTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/suggestions/${encodeURIComponent(termo)}`);
+                    const data = await response.json();
+                    
+                    if (data.sugestoes && data.sugestoes.length > 0) {
+                        showSuggestions(data.sugestoes, suggestionsDiv, input);
+                    } else {
+                        suggestionsDiv.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar sugestões:', error);
+                    suggestionsDiv.style.display = 'none';
+                }
+            }, 300);
+        }
+
+        // Mostrar sugestões
+        function showSuggestions(sugestoes, suggestionsDiv, input) {
+            suggestionsDiv.innerHTML = '';
+            
+            sugestoes.forEach(sugestao => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `
+                    <div class="suggestion-icon">📍</div>
+                    <div>
+                        <div class="suggestion-name">${sugestao.nome}</div>
+                        <div class="suggestion-address">${sugestao.endereco_completo}</div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    input.value = sugestao.nome;
+                    suggestionsDiv.style.display = 'none';
+                });
+                
+                suggestionsDiv.appendChild(item);
+            });
+            
+            suggestionsDiv.style.display = 'block';
+        }
+
+
+        // Esconder sugestões quando clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-container')) {
+                document.querySelectorAll('.autocomplete-suggestions').forEach(div => {
+                    div.style.display = 'none';
+                });
+            }
+        });
+
+        // Função para trocar origem e destino
+        function swapCities() {
+            const origem = origemInput.value;
+            const destino = destinoInput.value;
+            
+            origemInput.value = destino;
+            destinoInput.value = origem;
+            
+            // Limpar sugestões
+            document.getElementById('origem-suggestions').style.display = 'none';
+            document.getElementById('destino-suggestions').style.display = 'none';
+            
+            showMessage('🔄 Origem e destino trocados!', 'info');
         }
     </script>
 </body>
