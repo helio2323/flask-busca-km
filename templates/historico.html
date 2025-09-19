@@ -325,9 +325,6 @@
             <button class="btn" id="refresh-history-btn">
                 🔄 Atualizar
             </button>
-            <button class="btn btn-secondary" id="clear-history-btn">
-                🗑️ Limpar Histórico
-            </button>
             <a href="/" class="btn btn-secondary">
                 🏠 Página Inicial
             </a>
@@ -363,7 +360,6 @@
     <script>
         // Elementos DOM
         const refreshHistoryBtn = document.getElementById('refresh-history-btn');
-        const clearHistoryBtn = document.getElementById('clear-history-btn');
         const historyContent = document.getElementById('history-content');
         const messageArea = document.getElementById('message-area');
         const totalConsultas = document.getElementById('total-consultas');
@@ -378,7 +374,6 @@
 
         function setupEventListeners() {
             refreshHistoryBtn.addEventListener('click', loadHistory);
-            clearHistoryBtn.addEventListener('click', clearHistory);
         }
 
         // Carregar histórico
@@ -454,34 +449,6 @@
             consultasMassa.textContent = massa.toLocaleString('pt-BR');
         }
 
-        // Limpar histórico
-        async function clearHistory() {
-            if (!confirm('Tem certeza que deseja limpar todo o histórico? Esta ação não pode ser desfeita.')) {
-                return;
-            }
-
-            try {
-                clearHistoryBtn.disabled = true;
-                clearHistoryBtn.textContent = '⏳ Limpando...';
-
-                const response = await fetch('/historico/clear', {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    showMessage('✅ Histórico limpo com sucesso!', 'success');
-                    loadHistory();
-                } else {
-                    showMessage('❌ Erro ao limpar histórico', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao limpar histórico:', error);
-                showMessage('❌ Erro ao limpar histórico', 'error');
-            } finally {
-                clearHistoryBtn.disabled = false;
-                clearHistoryBtn.textContent = '🗑️ Limpar Histórico';
-            }
-        }
 
         // Mostrar mensagem
         function showMessage(message, type) {
