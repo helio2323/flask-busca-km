@@ -134,8 +134,58 @@ async def obter_latitude_longitude(cidade):
             else:
                 del cache_coordenadas[chave_cache]
         
+        # Dicionário com coordenadas conhecidas para cidades problemáticas
+        cidades_conhecidas = {
+            'recife pe': (-8.0584933, -34.8848193),
+            'recife': (-8.0584933, -34.8848193),
+            'jaboatao dos guararapes pe': (-8.1752476, -34.9468716),
+            'jaboatão dos guararapes pe': (-8.1752476, -34.9468716),
+            'jaboatão dos guararapes': (-8.1752476, -34.9468716),
+            'jaboatao dos guararapes': (-8.1752476, -34.9468716)
+        }
+        
+        # Verificar se a cidade está na lista de cidades conhecidas
+        cidade_lower = cidade.lower().strip()
+        if cidade_lower in cidades_conhecidas:
+            lat, lon = cidades_conhecidas[cidade_lower]
+            # Armazenar no cache
+            cache_coordenadas[chave_cache] = {
+                'latitude': lat,
+                'longitude': lon,
+                'timestamp': time.time()
+            }
+            print(f"Coordenada conhecida usada para: {cidade} -> {lat}, {lon}")
+            return lat, lon
+        
         geolocator = Nominatim(user_agent="calculadora_rotas_v2", timeout=10)
-        location = geolocator.geocode(cidade + ", Brasil")
+        
+        # Tentar diferentes formatos de busca para melhor precisão
+        search_queries = [
+            f"{cidade}, Pernambuco, Brasil",
+            f"{cidade}, PE, Brasil", 
+            f"{cidade}, Brasil"
+        ]
+        
+        location = None
+        for query in search_queries:
+            try:
+                location = geolocator.geocode(query, exactly_one=True)
+                if location:
+                    # Verificar se a localização é relevante (contém o nome da cidade)
+                    cidade_clean = cidade.lower().replace(' pe', '').replace('pe', '').strip()
+                    address_lower = location.address.lower()
+                    
+                    # Verificar se o nome da cidade está no endereço
+                    if cidade_clean in address_lower:
+                        print(f"Coordenada válida encontrada para '{cidade}' com query '{query}': {location.address}")
+                        break
+                    else:
+                        print(f"Coordenada inválida para '{cidade}' com query '{query}': {location.address}")
+                        location = None
+            except Exception as e:
+                print(f"Erro na busca com query '{query}': {e}")
+                continue
+        
         if location:
             # Armazenar no cache
             cache_coordenadas[chave_cache] = {
@@ -143,9 +193,10 @@ async def obter_latitude_longitude(cidade):
                 'longitude': location.longitude,
                 'timestamp': time.time()
             }
-            print(f"Nova coordenada processada e cacheada: {cidade}")
+            print(f"Nova coordenada processada e cacheada: {cidade} -> {location.address}")
             return location.latitude, location.longitude
         else:
+            print(f"Coordenadas não encontradas para: {cidade}")
             return None, None
     except Exception as e:
         print(f"Erro ao obter coordenadas para {cidade}: {e}")
