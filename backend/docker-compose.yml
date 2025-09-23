@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # Banco de dados PostgreSQL
   postgres:
@@ -11,19 +13,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-rotas_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - routecalc-network
+      - app-network
 
   # Backend FastAPI
   backend:
-    build: 
-      context: ./backend
+    build:
+      context: .
       dockerfile: Dockerfile
     container_name: routecalc-backend
     ports:
@@ -36,50 +38,33 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend:/app
+      - ./:/app
       - /app/__pycache__
+      - /app/.pytest_cache
     networks:
-      - routecalc-network
+      - app-network
     restart: unless-stopped
 
-  # Frontend Next.js
-  frontend:
+  # Backend para produção (opcional)
+  backend-prod:
     build:
-      context: ./route-frontend
-      dockerfile: Dockerfile
-    container_name: routecalc-frontend
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: routecalc-backend-prod
     ports:
-      - "3000:3000"
+      - "8001:8000"
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-rotas_db}
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
     networks:
-      - routecalc-network
+      - app-network
     restart: unless-stopped
-
-  # Frontend para desenvolvimento (opcional)
-  frontend-dev:
-    build:
-      context: ./route-frontend
-      dockerfile: Dockerfile.dev
-    container_name: routecalc-frontend-dev
-    ports:
-      - "3001:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-    depends_on:
-      - backend
-    volumes:
-      - ./route-frontend:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - routecalc-network
     profiles:
-      - dev
+      - production
 
   # PgAdmin para gerenciamento do banco (opcional)
   pgadmin:
@@ -93,7 +78,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - routecalc-network
+      - app-network
     profiles:
       - admin
 
@@ -102,5 +87,5 @@ volumes:
     driver: local
 
 networks:
-  routecalc-network:
+  app-network:
     driver: bridge

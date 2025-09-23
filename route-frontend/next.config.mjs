@@ -1,0 +1,36 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
+  },
+  // Configuração para Docker
+  output: 'standalone',
+  // Configurações de debug
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  // Configurações de desenvolvimento
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
+  // Configurações de webpack para debug
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      config.devtool = 'source-map'
+    }
+    return config
+  },
+}
+
+export default nextConfig

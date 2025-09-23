@@ -124,12 +124,15 @@ async def buscar_sugestoes_cidade(termo):
 
 async def obter_latitude_longitude(cidade):
     try:
+        # Normalizar formato da cidade (vírgula e pipe para espaço)
+        cidade_normalizada = cidade.replace(',', ' ').replace('|', ' ').strip()
+        
         # Verificar cache de coordenadas (válido por 7 dias)
-        chave_cache = gerar_chave_cache(cidade)
+        chave_cache = gerar_chave_cache(cidade_normalizada)
         if chave_cache in cache_coordenadas:
             dados_cache = cache_coordenadas[chave_cache]
             if not cache_expirado(dados_cache['timestamp'], 168):  # 7 dias = 168 horas
-                print(f"Cache hit para coordenadas: {cidade}")
+                print(f"Cache hit para coordenadas: {cidade_normalizada}")
                 return dados_cache['latitude'], dados_cache['longitude']
             else:
                 del cache_coordenadas[chave_cache]
@@ -141,29 +144,86 @@ async def obter_latitude_longitude(cidade):
             'jaboatao dos guararapes pe': (-8.1752476, -34.9468716),
             'jaboatão dos guararapes pe': (-8.1752476, -34.9468716),
             'jaboatão dos guararapes': (-8.1752476, -34.9468716),
-            'jaboatao dos guararapes': (-8.1752476, -34.9468716)
+            'jaboatao dos guararapes': (-8.1752476, -34.9468716),
+            'sao paulo sp': (-23.5505, -46.6333),
+            'são paulo sp': (-23.5505, -46.6333),
+            'sao paulo': (-23.5505, -46.6333),
+            'são paulo': (-23.5505, -46.6333),
+            'guarulhos sp': (-23.4538, -46.5331),
+            'guarulhos': (-23.4538, -46.5331),
+            'rio de janeiro rj': (-22.9068, -43.1729),
+            'rio de janeiro': (-22.9068, -43.1729),
+            'belo horizonte mg': (-19.9167, -43.9345),
+            'belo horizonte': (-19.9167, -43.9345),
+            'brasilia df': (-15.7801, -47.9292),
+            'brasília df': (-15.7801, -47.9292),
+            'brasilia': (-15.7801, -47.9292),
+            'brasília': (-15.7801, -47.9292),
+            'jundiai sp': (-23.1864, -46.8842),
+            'jundiaí sp': (-23.1864, -46.8842),
+            'jundiai': (-23.1864, -46.8842),
+            'jundiaí': (-23.1864, -46.8842),
+            'santos sp': (-23.9608, -46.3331),
+            'santos': (-23.9608, -46.3331),
+            'campinas sp': (-22.9056, -47.0608),
+            'campinas': (-22.9056, -47.0608),
+            'sao bernardo do campo sp': (-23.6939, -46.5650),
+            'são bernardo do campo sp': (-23.6939, -46.5650),
+            'sao bernardo do campo': (-23.6939, -46.5650),
+            'são bernardo do campo': (-23.6939, -46.5650),
+            'santo andre sp': (-23.6639, -46.5383),
+            'santo andré sp': (-23.6639, -46.5383),
+            'santo andre': (-23.6639, -46.5383),
+            'santo andré': (-23.6639, -46.5383),
+            'osasco sp': (-23.5329, -46.7919),
+            'osasco': (-23.5329, -46.7919),
+            'sao caetano do sul sp': (-23.6231, -46.5512),
+            'são caetano do sul sp': (-23.6231, -46.5512),
+            'sao caetano do sul': (-23.6231, -46.5512),
+            'são caetano do sul': (-23.6231, -46.5512)
         }
         
         # Verificar se a cidade está na lista de cidades conhecidas
-        cidade_lower = cidade.lower().strip()
-        if cidade_lower in cidades_conhecidas:
-            lat, lon = cidades_conhecidas[cidade_lower]
-            # Armazenar no cache
-            cache_coordenadas[chave_cache] = {
-                'latitude': lat,
-                'longitude': lon,
-                'timestamp': time.time()
-            }
-            print(f"Coordenada conhecida usada para: {cidade} -> {lat}, {lon}")
-            return lat, lon
+        cidade_lower = cidade_normalizada.lower().strip()
+        
+        # Tentar diferentes variações da cidade normalizada
+        variacoes_cidade = [
+            cidade_lower,
+            cidade_lower.replace('  ', ' '),  # Remove espaços duplos
+            cidade_lower.replace(' sp', ' sp').strip(),
+            cidade_lower.replace(' pe', ' pe').strip(),
+            cidade_lower.replace(' rj', ' rj').strip(),
+            cidade_lower.replace(' mg', ' mg').strip(),
+            cidade_lower.replace(' pr', ' pr').strip(),
+            cidade_lower.replace(' rs', ' rs').strip(),
+            cidade_lower.replace(' sc', ' sc').strip(),
+            cidade_lower.replace(' ba', ' ba').strip(),
+            cidade_lower.replace(' ce', ' ce').strip(),
+            cidade_lower.replace(' df', ' df').strip()
+        ]
+        
+        # Remover duplicatas mantendo ordem
+        variacoes_cidade = list(dict.fromkeys(variacoes_cidade))
+        
+        for variacao in variacoes_cidade:
+            if variacao in cidades_conhecidas:
+                lat, lon = cidades_conhecidas[variacao]
+                # Armazenar no cache
+                cache_coordenadas[chave_cache] = {
+                    'latitude': lat,
+                    'longitude': lon,
+                    'timestamp': time.time()
+                }
+                print(f"Coordenada conhecida usada para: {cidade_normalizada} -> {lat}, {lon}")
+                return lat, lon
         
         geolocator = Nominatim(user_agent="calculadora_rotas_v2", timeout=10)
         
         # Tentar diferentes formatos de busca para melhor precisão
         search_queries = [
-            f"{cidade}, Pernambuco, Brasil",
-            f"{cidade}, PE, Brasil", 
-            f"{cidade}, Brasil"
+            f"{cidade_normalizada}, Pernambuco, Brasil",
+            f"{cidade_normalizada}, PE, Brasil", 
+            f"{cidade_normalizada}, Brasil"
         ]
         
         location = None
@@ -172,15 +232,16 @@ async def obter_latitude_longitude(cidade):
                 location = geolocator.geocode(query, exactly_one=True)
                 if location:
                     # Verificar se a localização é relevante (contém o nome da cidade)
-                    cidade_clean = cidade.lower().replace(' pe', '').replace('pe', '').strip()
+                    cidade_clean = cidade_normalizada.lower().replace(' pe', '').replace('pe', '').replace(' sp', '').replace('sp', '').replace(' rj', '').replace('rj', '').replace(' mg', '').replace('mg', '').replace(' pr', '').replace('pr', '').replace(' rs', '').replace('rs', '').replace(' sc', '').replace('sc', '').replace(' ba', '').replace('ba', '').replace(' ce', '').replace('ce', '').replace(' df', '').replace('df', '').strip()
                     address_lower = location.address.lower()
                     
-                    # Verificar se o nome da cidade está no endereço
-                    if cidade_clean in address_lower:
-                        print(f"Coordenada válida encontrada para '{cidade}' com query '{query}': {location.address}")
+                    # Verificação mais flexível - se a cidade principal está no endereço
+                    cidade_principal = cidade_clean.split()[0] if cidade_clean.split() else cidade_clean
+                    if cidade_principal in address_lower and len(cidade_principal) > 2:
+                        print(f"Coordenada válida encontrada para '{cidade_normalizada}' com query '{query}': {location.address}")
                         break
                     else:
-                        print(f"Coordenada inválida para '{cidade}' com query '{query}': {location.address}")
+                        print(f"Coordenada inválida para '{cidade_normalizada}' com query '{query}': {location.address}")
                         location = None
             except Exception as e:
                 print(f"Erro na busca com query '{query}': {e}")
@@ -193,13 +254,13 @@ async def obter_latitude_longitude(cidade):
                 'longitude': location.longitude,
                 'timestamp': time.time()
             }
-            print(f"Nova coordenada processada e cacheada: {cidade} -> {location.address}")
+            print(f"Nova coordenada processada e cacheada: {cidade_normalizada} -> {location.address}")
             return location.latitude, location.longitude
         else:
-            print(f"Coordenadas não encontradas para: {cidade}")
+            print(f"Coordenadas não encontradas para: {cidade_normalizada}")
             return None, None
     except Exception as e:
-        print(f"Erro ao obter coordenadas para {cidade}: {e}")
+        print(f"Erro ao obter coordenadas para {cidade_normalizada}: {e}")
         return None, None
 
 async def criar_string_pontos_por_cidades(cidades):
