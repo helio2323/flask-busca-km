@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Plus, Trash2, Calculator, Route, DollarSign, Clock, Fuel } from "lucide-react"
-import { apiClient, RouteResponse } from "../lib/api"
+import { apiClient, RouteResponse } from "@/lib/api"
 
 interface RoutePoint {
   id: string
