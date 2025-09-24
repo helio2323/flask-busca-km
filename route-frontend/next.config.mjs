@@ -32,17 +32,6 @@ const nextConfig = {
       config.devtool = 'source-map'
     }
     
-    // Configuração para resolver módulos - versão 3
-    config.resolve = {
-      ...config.resolve,
-      alias: {
-        ...config.resolve.alias,
-        '@': path.resolve(process.cwd(), '.'),
-        '@/lib': path.resolve(process.cwd(), './lib'),
-        '@/lib/api': path.resolve(process.cwd(), './lib/api'),
-      },
-    }
-    
     return config
   },
 }
