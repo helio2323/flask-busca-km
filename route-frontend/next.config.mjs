@@ -1,3 +1,5 @@
+import path from 'path'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -29,6 +31,17 @@ const nextConfig = {
     if (dev) {
       config.devtool = 'source-map'
     }
+    
+    // Configuração para resolver módulos
+    config.resolve = {
+      ...config.resolve,
+      alias: {
+        ...config.resolve.alias,
+        '@': path.resolve(process.cwd(), '.'),
+        '@/lib': path.resolve(process.cwd(), './lib'),
+      },
+    }
+    
     return config
   },
 }
