@@ -1,5 +1,5 @@
 # Sistema de Cálculo de Rotas - Versão Reestruturada
-
+teste comit
 ## 🚀 Visão Geral
 
 Sistema moderno para cálculo de distâncias e pedágios entre cidades brasileiras, com interface web responsiva e API RESTful.
