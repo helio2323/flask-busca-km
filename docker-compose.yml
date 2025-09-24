@@ -38,6 +38,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/__pycache__
+    working_dir: /app
     networks:
       - routecalc-network
     restart: unless-stopped
