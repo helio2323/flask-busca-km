@@ -32,7 +32,7 @@ const nextConfig = {
       config.devtool = 'source-map'
     }
     
-    // Configuração para resolver módulos
+    // Configuração para resolver módulos - versão 2
     config.resolve = {
       ...config.resolve,
       alias: {
