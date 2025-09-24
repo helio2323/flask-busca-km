@@ -12,10 +12,11 @@ class DockerSettings(BaseSettings):
     
     # CORS - Configuração para Docker
     backend_cors_origins: list = [
-        "http://localhost:3000",  # Next.js frontend
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://frontend:3000",   # Container frontend
+        "http://localhost:5000",  # Next.js frontend
+        "http://localhost:5001",  # Next.js frontend dev
+        "http://127.0.0.1:5000",
+        "http://127.0.0.1:5001",
+        "http://frontend:5000",   # Container frontend
     ]
     
     # Cache settings
@@ -30,7 +31,7 @@ class DockerSettings(BaseSettings):
         case_sensitive = True
 
 # Usar configuração Docker se estiver em container
-if os.getenv("ENVIRONMENT") == "development" and os.path.exists("/.dockerenv"):
+if os.path.exists("/.dockerenv") or os.getenv("ENVIRONMENT") == "development":
     settings = DockerSettings()
 else:
     from .config import settings

@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: routecalc-backend
     ports:
-      - "8000:8000"
+      - "50001:50001"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-rotas_db}
       - PYTHONPATH=/app
@@ -49,10 +49,10 @@ services:
       dockerfile: Dockerfile
     container_name: routecalc-frontend
     ports:
-      - "3000:3000"
+      - "5000:5000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_URL=http://localhost:50001/api/v1
     depends_on:
       - backend
     networks:
@@ -66,10 +66,10 @@ services:
       dockerfile: Dockerfile.dev
     container_name: routecalc-frontend-dev
     ports:
-      - "3001:3000"
+      - "5001:5000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_URL=http://localhost:50001/api/v1
     depends_on:
       - backend
     volumes:

@@ -196,7 +196,7 @@ export function GroupManager() {
 
   const handleDownloadGroup = async (groupId: number, groupName: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/groups/${groupId}/download`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50001/api/v1'}/groups/${groupId}/download`)
       
       if (response.ok) {
         const blob = await response.blob()

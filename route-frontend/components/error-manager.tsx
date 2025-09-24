@@ -47,7 +47,7 @@ export function ErrorManager({ grupoId, grupoNome }: ErrorManagerProps) {
   const loadErrors = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/groups/${grupoId}/errors`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50001/api/v1'}/groups/${grupoId}/errors`);
       if (response.ok) {
         const data = await response.json();
         setErrors(data);

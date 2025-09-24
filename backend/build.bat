@@ -20,8 +20,8 @@ if %errorlevel% equ 0 (
     
     if %errorlevel% equ 0 (
         echo ✅ Serviços iniciados com sucesso!
-        echo 🌐 Backend disponível em: http://localhost:8000
-        echo 📊 API Docs disponível em: http://localhost:8000/docs
+        echo 🌐 Backend disponível em: http://localhost:50001
+        echo 📊 API Docs disponível em: http://localhost:50001/docs
         echo 🗄️ PostgreSQL disponível em: localhost:5432
         echo.
         echo 📋 Comandos úteis:

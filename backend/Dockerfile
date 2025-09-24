@@ -35,11 +35,11 @@ RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 USER appuser
 
 # Expor porta
-EXPOSE 8000
+EXPOSE 50001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:50001/health || exit 1
 
 # Comando para executar a aplicação
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "50001", "--reload"]

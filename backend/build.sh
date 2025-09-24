@@ -21,8 +21,8 @@ if [ $? -eq 0 ]; then
     
     if [ $? -eq 0 ]; then
         echo "✅ Serviços iniciados com sucesso!"
-        echo "🌐 Backend disponível em: http://localhost:8000"
-        echo "📊 API Docs disponível em: http://localhost:8000/docs"
+        echo "🌐 Backend disponível em: http://localhost:50001"
+        echo "📊 API Docs disponível em: http://localhost:50001/docs"
         echo "🗄️ PostgreSQL disponível em: localhost:5432"
         echo ""
         echo "📋 Comandos úteis:"
