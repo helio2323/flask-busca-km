@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, FolderOpen, Edit, Trash2, Play, MapPin, Clock, FileSpreadsheet, Upload, Download, X, Eye, Archive } from "lucide-react"
-import { apiClient, Grupo, GrupoCreate, GrupoRotas, UploadResponse, UploadStatus } from "@/lib/api"
+import { apiClient, Grupo, GrupoCreate, GrupoRotas, UploadResponse, UploadStatus } from "../lib/api"
 import { useRouter } from "next/navigation"
 
 export function GroupManager() {

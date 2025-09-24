@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Calculator, History, TrendingUp, MapPin, Clock, DollarSign, Route, Users, Package } from "lucide-react"
 import { useState, useEffect } from "react"
-import { apiClient, GrupoStats, HistoryResponse } from "@/lib/api"
+import { apiClient, GrupoStats, HistoryResponse } from "../lib/api"
 
 export function Dashboard() {
   const [stats, setStats] = useState<GrupoStats | null>(null)
