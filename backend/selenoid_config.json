@@ -1,0 +1,34 @@
+{
+  "browsers": {
+    "chrome": {
+      "default": "122.0",
+      "versions": {
+        "122.0": {
+          "image": "selenoid/vnc:chrome_122.0",
+          "port": "4444",
+          "path": "/",
+          "volumes": [
+            "/dev/shm:/dev/shm"
+          ],
+          "env": [
+            "TZ=UTC"
+          ]
+        }
+      }
+    }
+  },
+  "logging": {
+    "driver": "all",
+    "browser": "all",
+    "server": "all"
+  },
+  "video": {
+    "enable": false,
+    "screenResolution": "1920x1080x24",
+    "frameRate": 15
+  },
+  "vnc": {
+    "enable": true,
+    "screenResolution": "1920x1080x24"
+  }
+}

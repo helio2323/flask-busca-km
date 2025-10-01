@@ -10,7 +10,8 @@ Sistema moderno para cálculo de distâncias e pedágios entre cidades brasileir
 - **API RESTful** com FastAPI
 - **Banco de dados** PostgreSQL
 - **Sistema de cache** inteligente
-- **Integração** com API Rotas Brasil
+- **Webscraping** com Selenium + Selenoid (método principal)
+- **Integração** com API Rotas Brasil (fallback)
 - **Geocodificação** com Nominatim
 
 ### Frontend (Next.js + React)
@@ -162,7 +163,8 @@ CREATE TABLE grupos (
 ### Calculadora de Rotas
 - ✅ Cálculo de distância e pedágios
 - ✅ Rotas individuais e múltiplas
-- ✅ Integração com API Rotas Brasil
+- ✅ **Webscraping com Selenium + Selenoid (método principal)**
+- ✅ **API Rotas Brasil como fallback**
 - ✅ Sistema de cache inteligente
 - ✅ Geocodificação automática
 
@@ -190,6 +192,8 @@ CREATE TABLE grupos (
 - **SQLAlchemy** - ORM para PostgreSQL
 - **PostgreSQL** - Banco de dados principal
 - **Pydantic** - Validação de dados
+- **Selenium** - Webscraping automatizado
+- **Selenoid** - Container de navegadores remotos
 - **Geopy** - Geocodificação
 - **Pandas** - Processamento de planilhas
 
@@ -237,6 +241,28 @@ CREATE TABLE grupos (
 3. **Erro de cache**
    - Limpe o cache: `POST /api/v1/cache/clear`
    - Verifique as estatísticas: `GET /api/v1/cache/stats`
+
+## 🌐 Webscraping com Selenoid
+
+### Configuração
+O sistema utiliza webscraping como método principal para obter dados do site rotasbrasil.com.br:
+
+- **Selenoid URL**: `http://168.231.89.187:4444/wd/hub`
+- **Navegador**: Chrome 122.0
+- **Resolução**: 1920x1080
+- **VNC**: Habilitado para debug
+
+### Funcionamento
+1. **Método Principal**: Webscraping com Selenium
+2. **Fallback**: API original do Rotas Brasil
+3. **Cache**: Resultados armazenados por 6 horas
+4. **Logs**: Detalhados para monitoramento
+
+### Teste
+```bash
+cd backend
+python test_webscraping.py
+```
 
 ## 📝 Próximos Passos
 

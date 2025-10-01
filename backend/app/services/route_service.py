@@ -8,12 +8,14 @@ from geopy.geocoders import Nominatim
 from decimal import Decimal
 from ..core.config import settings
 from .cache_service import cache_service
+from .webscraping_service import WebScrapingService
 
 class RouteService:
     def __init__(self):
         self.cache_coordenadas = {}
         self.cache_rotas = {}
         self.cache_sugestoes = {}
+        self.webscraping_service = WebScrapingService()
     
     def gerar_chave_cache(self, texto: str) -> str:
         """Gera uma chave única para o cache usando hash MD5"""
@@ -298,7 +300,7 @@ class RouteService:
             return 0
     
     async def processar_rota(self, origem: str, destino: str) -> Dict[str, Any]:
-        """Processa uma rota individual - FUNÇÃO PRINCIPAL REUTILIZADA"""
+        """Processa uma rota individual - WEBSCRAPING COMO MÉTODO PRINCIPAL"""
         try:
             print(f"\n🚀 === NOVA ROTA RECEBIDA ===")
             print(f"📍 Origem: {origem}")
@@ -315,24 +317,88 @@ class RouteService:
                     print(f"⏰ Cache expirado - removendo")
                     del self.cache_rotas[chave_rota]
             
-            print(f"🔍 Buscando coordenadas das cidades...")
+            # MÉTODO PRINCIPAL: WEBSCRAPING
+            print(f"🌐 Tentando webscraping...")
+            try:
+                resultado = await self.webscraping_service.calcular_rota_webscraping(origem, destino)
+                
+                # Verificar se o webscraping foi bem-sucedido
+                if resultado.get("distance", 0) > 0:
+                    print(f"✅ Webscraping bem-sucedido: {resultado['distance']}km, R${resultado['pedagios']}")
+                    
+                    # Armazenar no cache
+                    self.cache_rotas[chave_rota] = {
+                        'resultado': resultado,
+                        'timestamp': time.time(),
+                        'validado': True,
+                        'metodo': 'webscraping'
+                    }
+                    
+                    print(f"💾 Resultado salvo no cache")
+                    print(f"🎯 === RESULTADO FINAL (WEBSCRAPING) ===")
+                    print(f"📍 {origem} → {destino}")
+                    print(f"📏 Distância: {resultado['distance']} km")
+                    print(f"💰 Pedágios: R$ {resultado['pedagios']}")
+                    print(f"✅ Rota processada com sucesso!\n")
+                    return resultado
+                else:
+                    print(f"⚠️ Webscraping falhou, tentando API como fallback...")
+                    raise Exception("Webscraping retornou resultado inválido")
+                    
+            except Exception as webscraping_error:
+                print(f"❌ Erro no webscraping: {webscraping_error}")
+                print(f"🔄 Tentando API como fallback...")
+                
+                # FALLBACK: API ORIGINAL
+                resultado = await self._processar_rota_api_fallback(origem, destino)
+                
+                # Armazenar no cache marcando como fallback
+                self.cache_rotas[chave_rota] = {
+                    'resultado': resultado,
+                    'timestamp': time.time(),
+                    'validado': True,
+                    'metodo': 'api_fallback'
+                }
+                
+                print(f"💾 Resultado (fallback) salvo no cache")
+                print(f"🎯 === RESULTADO FINAL (API FALLBACK) ===")
+                print(f"📍 {origem} → {destino}")
+                print(f"📏 Distância: {resultado['distance']} km")
+                print(f"💰 Pedágios: R$ {resultado['pedagios']}")
+                print(f"✅ Rota processada com sucesso!\n")
+                return resultado
+            
+        except Exception as e:
+            print(f"❌ Erro geral ao processar rota {origem} -> {destino}: {e}")
+            return {
+                "origem": origem,
+                "destino": destino,
+                "distance": 0,
+                "pedagios": 0,
+                "fonte": "erro_geral"
+            }
+    
+    async def _processar_rota_api_fallback(self, origem: str, destino: str) -> Dict[str, Any]:
+        """Método de fallback usando a API original (código reservado)"""
+        try:
+            print(f"🔍 Buscando coordenadas das cidades (API fallback)...")
             # Calcula distância e pedágios
             lista_cidades = [origem, destino]
             pontos_formatados = await self.criar_string_pontos_por_cidades(lista_cidades)
             
             if not pontos_formatados:
                 print(f"❌ Erro: Cidades não encontradas")
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destino,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_erro"
                 }
-                return resultado
             
             print(f"✅ Coordenadas encontradas: {pontos_formatados}")
             
-            print(f"🌐 Chamando API do Rotas Brasil...")
+            print(f"🌐 Chamando API do Rotas Brasil (fallback)...")
             url_ajustada = f'{settings.rotas_brasil_api_url}?pontos={pontos_formatados}&alternatives=true&eixos=2&veiculo=1&st=false&combustivel=&consumo=&evitarPedagio=false&recaptchaRespostaCliente=03AFcWeA7j9naH_X1GiW2hXsNijAAl6OD4BGA4Ivh1_OyCx6W_v0z9EU26aLcc5pBUAh7-4RtMF16tD2fXZD-2A2pjC5DkhCEjsvhAnAss5WiYyTJbVc9_s-ggLNMRBIEWu8ZQW1AfHPqCSbKXkQ4XZhCxFgAzYzmF8udZAfhNEI7T6L6Jvcc6vF2ONx-ax9pIJAxmTz3OAFjy4dWCaGCMD9qwb17Fmxm44JP7EiCHm3lRdd_RGGWLQpUagh5gRix6x2U6R0CPffZ1uBpOv3oeM1pSjz0Eoutl_9HUB0nVJQNHIj7huLHV7wpIVj0B2VY5LvuHhh94ysYnWLu9-IqhLihEgOIVlgfjoCae5p0Yl2cUcmwHyyakjjbKpavnD2jfbkPFA97YQ2wcLBOFV6OqtkZ-dceO1yMIo1pp-PEXH7gz2j0QIFB-c8H158UzpacH-27tf8N1Ithk-88ckLZM3U2a1uAgQUhxYDm4Db3ZRFvyT_wydTfFZBGPgSTV1f2-ahy88wEhzxjPkeY7nTo1UNMZcrjnmiau9g--83jPyQSvlUi31MwUobR8AIHRkysOqMctf6WGtwZl9zSCPfurXU-9f95OTK9BZMnTxHpLl_G_7JwZAVc4bdDwh5BSGxPRKnBbeFdaus462FQckgFrtH3aH6Bb4fA_wBIKa5umFMy3xSbXhIXmumPpzUCtXLEyEl30cbrdConCE9_BvoMXwsXqD52bRqONT7rH_KzthaTT0DgE1Eb9x5U&recaptchaRespostaV3=true&evitarBalsa=false&meioPagamento=&fornecedorPagamento=&dataTarifa=2024-02-29'
             
             resposta = await self.chamar_api_rotas_brasil(url_ajustada)
@@ -340,13 +406,13 @@ class RouteService:
             # Validação da resposta
             if not resposta or 'routes' not in resposta or not resposta['routes']:
                 print(f"❌ Erro: Rota não encontrada na API")
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destino,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_erro"
                 }
-                return resultado
             
             print(f"✅ Resposta da API recebida com sucesso")
             
@@ -354,13 +420,13 @@ class RouteService:
             
             if 'distance' not in route:
                 print(f"❌ Erro: Distância não disponível na resposta")
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destino,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_erro"
                 }
-                return resultado
             
             print(f"📏 Processando distância...")
             distance = (route['distance'] / 1000)
@@ -381,50 +447,108 @@ class RouteService:
             else:
                 print(f"💰 Nenhum pedágio encontrado")
             
-            resultado = {
+            return {
                 "origem": origem,
                 "destino": destino,
                 "distance": distance,
-                "pedagios": preco_pedagio
+                "pedagios": preco_pedagio,
+                "fonte": "api_fallback"
             }
-            
-            # Armazenar no cache com validação adicional
-            self.cache_rotas[chave_rota] = {
-                'resultado': resultado,
-                'timestamp': time.time(),
-                'validado': True  # Flag para indicar que foi validado
-            }
-            
-            print(f"💾 Resultado salvo no cache")
-            print(f"🎯 === RESULTADO FINAL ===")
-            print(f"📍 {origem} → {destino}")
-            print(f"📏 Distância: {distance} km")
-            print(f"💰 Pedágios: R$ {preco_pedagio}")
-            print(f"✅ Rota processada com sucesso!\n")
-            return resultado
             
         except Exception as e:
-            print(f"Erro ao processar rota {origem} -> {destino}: {e}")
+            print(f"❌ Erro no fallback da API: {e}")
             return {
                 "origem": origem,
                 "destino": destino,
                 "distance": 0,
-                "pedagios": 0
+                "pedagios": 0,
+                "fonte": "api_fallback_erro"
             }
     
     async def processar_rota_multipla(self, origem: str, destinos_lista: List[str]) -> Dict[str, Any]:
-        """Processa uma rota com múltiplos destinos em sequência - FUNÇÃO PRINCIPAL REUTILIZADA"""
+        """Processa uma rota com múltiplos destinos - WEBSCRAPING COMO MÉTODO PRINCIPAL"""
         try:
-            # Verificar cache de rotas múltiplas
             destinos_str = ", ".join(destinos_lista)
+            print(f"\n🚀 === ROTA MÚLTIPLA RECEBIDA ===")
+            print(f"📍 Origem: {origem}")
+            print(f"📍 Destinos: {destinos_str}")
+            
+            # Verificar cache de rotas múltiplas
             chave_rota = self.gerar_chave_cache(f"{origem}->{destinos_str}")
             if chave_rota in self.cache_rotas:
                 dados_cache = self.cache_rotas[chave_rota]
                 if not self.cache_expirado(dados_cache['timestamp'], 6):  # 6 horas
-                    print(f"Cache hit para rota múltipla: {origem} -> {destinos_str}")
+                    print(f"💾 Cache encontrado para rota múltipla: {origem} -> {destinos_str}")
                     return dados_cache['resultado']
                 else:
+                    print(f"⏰ Cache expirado - removendo")
                     del self.cache_rotas[chave_rota]
+            
+            # MÉTODO PRINCIPAL: WEBSCRAPING MÚLTIPLO
+            print(f"🌐 Tentando webscraping múltiplo...")
+            try:
+                resultado = await self.webscraping_service.calcular_rota_multipla_webscraping(origem, destinos_lista)
+                
+                # Verificar se o webscraping foi bem-sucedido
+                if resultado.get("distance", 0) > 0:
+                    print(f"✅ Webscraping múltiplo bem-sucedido: {resultado['distance']}km, R${resultado['pedagios']}")
+                    
+                    # Armazenar no cache
+                    self.cache_rotas[chave_rota] = {
+                        'resultado': resultado,
+                        'timestamp': time.time(),
+                        'validado': True,
+                        'metodo': 'webscraping_multiplo'
+                    }
+                    
+                    print(f"💾 Resultado múltiplo salvo no cache")
+                    print(f"🎯 === RESULTADO FINAL (WEBSCRAPING MÚLTIPLO) ===")
+                    print(f"📍 {origem} → {destinos_str}")
+                    print(f"📏 Distância: {resultado['distance']} km")
+                    print(f"💰 Pedágios: R$ {resultado['pedagios']}")
+                    print(f"✅ Rota múltipla processada com sucesso!\n")
+                    return resultado
+                else:
+                    print(f"⚠️ Webscraping múltiplo falhou, tentando API como fallback...")
+                    raise Exception("Webscraping múltiplo retornou resultado inválido")
+                    
+            except Exception as webscraping_error:
+                print(f"❌ Erro no webscraping múltiplo: {webscraping_error}")
+                print(f"🔄 Tentando API como fallback...")
+                
+                # FALLBACK: API ORIGINAL
+                resultado = await self._processar_rota_multipla_api_fallback(origem, destinos_lista)
+                
+                # Armazenar no cache marcando como fallback
+                self.cache_rotas[chave_rota] = {
+                    'resultado': resultado,
+                    'timestamp': time.time(),
+                    'validado': True,
+                    'metodo': 'api_fallback_multiplo'
+                }
+                
+                print(f"💾 Resultado múltiplo (fallback) salvo no cache")
+                print(f"🎯 === RESULTADO FINAL (API FALLBACK MÚLTIPLO) ===")
+                print(f"📍 {origem} → {destinos_str}")
+                print(f"📏 Distância: {resultado['distance']} km")
+                print(f"💰 Pedágios: R$ {resultado['pedagios']}")
+                print(f"✅ Rota múltipla processada com sucesso!\n")
+                return resultado
+            
+        except Exception as e:
+            print(f"❌ Erro geral ao processar rota múltipla {origem} -> {destinos_lista}: {e}")
+            return {
+                "origem": origem,
+                "destino": ", ".join(destinos_lista),
+                "distance": 0,
+                "pedagios": 0,
+                "fonte": "erro_geral_multiplo"
+            }
+    
+    async def _processar_rota_multipla_api_fallback(self, origem: str, destinos_lista: List[str]) -> Dict[str, Any]:
+        """Método de fallback para rotas múltiplas usando a API original (código reservado)"""
+        try:
+            destinos_str = ", ".join(destinos_lista)
             
             # Criar lista completa da rota: origem + todos os destinos
             rota_completa = [origem] + destinos_lista
@@ -433,13 +557,13 @@ class RouteService:
             pontos_formatados = await self.criar_string_pontos_por_cidades(rota_completa)
             
             if not pontos_formatados:
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destinos_str,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_multiplo_erro"
                 }
-                return resultado
             
             url_ajustada = f'{settings.rotas_brasil_api_url}?pontos={pontos_formatados}&alternatives=true&eixos=2&veiculo=1&st=false&combustivel=&consumo=&evitarPedagio=false&recaptchaRespostaCliente=03AFcWeA7j9naH_X1GiW2hXsNijAAl6OD4BGA4Ivh1_OyCx6W_v0z9EU26aLcc5pBUAh7-4RtMF16tD2fXZD-2A2pjC5DkhCEjsvhAnAss5WiYyTJbVc9_s-ggLNMRBIEWu8ZQW1AfHPqCSbKXkQ4XZhCxFgAzYzmF8udZAfhNEI7T6L6Jvcc6vF2ONx-ax9pIJAxmTz3OAFjy4dWCaGCMD9qwb17Fmxm44JP7EiCHm3lRdd_RGGWLQpUagh5gRix6x2U6R0CPffZ1uBpOv3oeM1pSjz0Eoutl_9HUB0nVJQNHIj7huLHV7wpIVj0B2VY5LvuHhh94ysYnWLu9-IqhLihEgOIVlgfjoCae5p0Yl2cUcmwHyyakjjbKpavnD2jfbkPFA97YQ2wcLBOFV6OqtkZ-dceO1yMIo1pp-PEXH7gz2j0QIFB-c8H158UzpacH-27tf8N1Ithk-88ckLZM3U2a1uAgQUhxYDm4Db3ZRFvyT_wydTfFZBGPgSTV1f2-ahy88wEhzxjPkeY7nTo1UNMZcrjnmiau9g--83jPyQSvlUi31MwUobR8AIHRkysOqMctf6WGtwZl9zSCPfurXU-9f95OTK9BZMnTxHpLl_G_7JwZAVc4bdDwh5BSGxPRKnBbeFdaus462FQckgFrtH3aH6Bb4fA_wBIKa5umFMy3xSbXhIXmumPpzUCtXLEyEl30cbrdConCE9_BvoMXwsXqD52bRqONT7rH_KzthaTT0DgE1Eb9x5U&recaptchaRespostaV3=true&evitarBalsa=false&meioPagamento=&fornecedorPagamento=&dataTarifa=2024-02-29'
             
@@ -447,24 +571,24 @@ class RouteService:
             
             # Validação da resposta
             if not resposta or 'routes' not in resposta or not resposta['routes']:
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destinos_str,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_multiplo_erro"
                 }
-                return resultado
             
             route = resposta['routes'][0]
             
             if 'distance' not in route:
-                resultado = {
+                return {
                     "origem": origem,
                     "destino": destinos_str,
                     "distance": 0,
-                    "pedagios": 0
+                    "pedagios": 0,
+                    "fonte": "api_fallback_multiplo_erro"
                 }
-                return resultado
             
             distance = (route['distance'] / 1000)
             distance = round(distance, 2)
@@ -479,30 +603,22 @@ class RouteService:
                     print(f"Erro ao calcular pedágios: {e}")
                     preco_pedagio = 0
             
-            resultado = {
+            return {
                 "origem": origem,
                 "destino": destinos_str,
                 "distance": distance,
-                "pedagios": preco_pedagio
+                "pedagios": preco_pedagio,
+                "fonte": "api_fallback_multiplo"
             }
-            
-            # Armazenar no cache com validação adicional
-            self.cache_rotas[chave_rota] = {
-                'resultado': resultado,
-                'timestamp': time.time(),
-                'validado': True  # Flag para indicar que foi validado
-            }
-            
-            print(f"Rota múltipla processada e cacheada: {origem} -> {' -> '.join(destinos_lista)}")
-            return resultado
             
         except Exception as e:
-            print(f"Erro ao processar rota múltipla {origem} -> {destinos_lista}: {e}")
+            print(f"❌ Erro no fallback da API múltipla: {e}")
             return {
                 "origem": origem,
                 "destino": ", ".join(destinos_lista),
-                "distance": 0,  # Retornar 0 em vez de string de erro
-                "pedagios": 0   # Retornar 0 em vez de string de erro
+                "distance": 0,
+                "pedagios": 0,
+                "fonte": "api_fallback_multiplo_erro"
             }
     
     async def processar_rota_com_cache(self, origem: str, destino: str, 

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: routecalc-postgres
+    environment:
+      POSTGRES_DB: rotas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rotas_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - routecalc-network
+
+  # Backend FastAPI (sem build, executa localmente)
+  backend:
+    image: python:3.11-slim
+    container_name: routecalc-backend
+    ports:
+      - "50001:50001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/rotas_db
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    networks:
+      - routecalc-network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        apt-get update && 
+        apt-get install -y gcc libpq-dev curl wget gnupg unzip xvfb &&
+        pip install -r requirements.txt &&
+        uvicorn app.main:app --host 0.0.0.0 --port 50001 --reload
+      "
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  routecalc-network:
+    driver: bridge
