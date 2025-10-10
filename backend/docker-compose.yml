@@ -29,7 +29,7 @@ services:
       dockerfile: Dockerfile
     container_name: routecalc-backend
     ports:
-      - "50001:50001"
+      - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-rotas_db}
       - PYTHONPATH=/app
