@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
+import os
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -26,11 +27,26 @@ app = FastAPI(
 )
 
 # Configurar CORS
+def get_cors_origins():
+    """Obter origens CORS configuradas"""
+    origins = settings.backend_cors_origins.copy()
+    
+    # Adicionar origens extras via variável de ambiente
+    if settings.additional_cors_origins:
+        additional_origins = settings.additional_cors_origins.split(",")
+        origins.extend([origin.strip() for origin in additional_origins])
+    
+    # Em desenvolvimento, permitir qualquer origem
+    if os.getenv("ENVIRONMENT", "development") == "development":
+        origins.append("*")
+    
+    return origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.backend_cors_origins,
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

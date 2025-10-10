@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     api_v1_str: str = "/api/v1"
     project_name: str = "Sistema de Cálculo de Rotas"
     
-    # CORS
+    # CORS - Configuração flexível
     backend_cors_origins: list = [
         "http://localhost:3000",  # Next.js frontend padrão
         "http://localhost:5000",  # Next.js frontend (nova porta)
@@ -20,7 +20,15 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5000",  # Nova porta frontend
         "http://127.0.0.1:5001",
         "http://127.0.0.1:50001",
+        # VPS IPs
+        "http://168.231.89.187:5000",  # VPS frontend
+        "http://168.231.89.187:5001",  # VPS backend
+        "https://168.231.89.187:5000", # VPS frontend HTTPS
+        "https://168.231.89.187:5001", # VPS backend HTTPS
     ]
+    
+    # CORS adicional via variável de ambiente
+    additional_cors_origins: Optional[str] = None
     
     # Cache settings
     cache_expiration_hours: int = 6
