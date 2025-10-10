@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 
 from ..core.database import get_db
-from ..schemas.rota import RouteCalculate, RouteResponse, RouteMultipleCalculate, RouteBatchResponse
+from ..schemas.rota import RouteCalculate, RouteResponse, RouteMultipleCalculate, RouteMultipleResponse, RouteBatchResponse
 from ..services.route_service import RouteService
 from ..models.consulta import Consulta
 from ..models.upload_error import UploadError
@@ -36,6 +36,25 @@ async def processar_rota_individual(
         origem = str(row['origem']).strip()
         destinos_str = str(row['destino']).strip()
         
+        # Verificar se tem informações de UF para usar o novo formato
+        uf_origem = None
+        uf_destino = None
+        if 'uf' in row.index and not pd.isna(row['uf']):
+            uf_origem = str(row['uf']).strip()
+        if 'uf.1' in row.index and not pd.isna(row['uf.1']):
+            uf_destino = str(row['uf.1']).strip()
+        
+        # Formatar origem e destino no padrão "Cidade, Estado, BR"
+        if uf_origem:
+            origem_formatada = f"{origem}, {uf_origem}, BR"
+        else:
+            origem_formatada = origem
+        
+        if uf_destino:
+            destino_formatado = f"{destinos_str}, {uf_destino}, BR"
+        else:
+            destino_formatado = destinos_str
+        
         if pd.isna(row['origem']) or pd.isna(row['destino']):
             print(f"⚠️ Linha {index + 1}: Dados inválidos (origem ou destino vazio)")
             # Salvar erro no banco
@@ -58,16 +77,60 @@ async def processar_rota_individual(
         
         # Processar rota sempre via API (cache desabilitado)
         if len(destinos) == 1:
-            resultado = await route_service.processar_rota(origem, destinos[0])
-            resultado["fonte"] = "api"
+            # PROCESSO CORRETO: Linha -> Autocomplete -> Match -> KM/Pedágio
+            
+            # Formatar destino para autocomplete
+            destino_final = f"{destinos[0]}, {uf_destino}, BR" if uf_destino else destinos[0]
+            
+            # 1. AUTCOMPLETE PARA ORIGEM
+            print(f"🔍 Buscando autocomplete para origem: {origem}")
+            origem_autocomplete = await route_service.rotas_brasil_service.buscar_cidade_completa(origem_formatada)
+            if not origem_autocomplete:
+                print(f"❌ Origem não encontrada no autocomplete: {origem_formatada}")
+                return {'success': False, 'erro': 'Origem não encontrada no autocomplete'}
+            
+            origem_correta = origem_autocomplete.get('display_name', origem_formatada)
+            print(f"✅ Origem encontrada: {origem_correta}")
+            
+            # 2. AUTCOMPLETE PARA DESTINO
+            print(f"🔍 Buscando autocomplete para destino: {destinos[0]}")
+            destino_autocomplete = await route_service.rotas_brasil_service.buscar_cidade_completa(destino_final)
+            if not destino_autocomplete:
+                print(f"❌ Destino não encontrado no autocomplete: {destino_final}")
+                return {'success': False, 'erro': 'Destino não encontrado no autocomplete'}
+            
+            destino_correto = destino_autocomplete.get('display_name', destino_final)
+            print(f"✅ Destino encontrado: {destino_correto}")
+            
+            # 3. MATCH VERIFICADO - CALCULAR KM/PEDÁGIO
+            print(f"🚀 Calculando rota: {origem_correta} -> {destino_correto}")
+            resultado = await route_service.processar_rota(origem_correta, destino_correto)
+            resultado["fonte"] = "api_autocomplete"
         else:
-            # Para múltiplos destinos
-            resultado = await route_service.processar_rota_multipla(origem, destinos)
+            # Para múltiplos destinos, formatar cada destino
+            destinos_formatados = []
+            for destino in destinos:
+                if uf_destino:
+                    destinos_formatados.append(f"{destino}, {uf_destino}, BR")
+                else:
+                    destinos_formatados.append(destino)
+            resultado = await route_service.processar_rota_multipla(origem_formatada, destinos_formatados)
             resultado["fonte"] = "api"
         
         # Verificar se o resultado é válido
-        distancia_valida = isinstance(resultado.get("distance"), (int, float)) and resultado.get("distance", 0) > 0
-        pedagios_validos = isinstance(resultado.get("pedagios"), (int, float)) and resultado.get("pedagios", 0) >= 0
+        distance = resultado.get("distance", 0)
+        pedagios = resultado.get("pedagios", 0)
+        
+        # Converter para float se necessário
+        try:
+            distance_float = float(distance) if distance is not None else 0
+            pedagios_float = float(pedagios) if pedagios is not None else 0
+        except (ValueError, TypeError):
+            distance_float = 0
+            pedagios_float = 0
+        
+        distancia_valida = distance_float > 0
+        pedagios_validos = pedagios_float >= 0
         
         if distancia_valida and pedagios_validos:
             # Salvar no histórico
@@ -75,8 +138,10 @@ async def processar_rota_individual(
                 planilha_id=planilha_id,
                 origem=origem,
                 destino=f"{destinos_str} [UPLOAD:{upload_id}]",
-                distancia=resultado["distance"],
-                pedagios=resultado["pedagios"],
+                uf_origem=uf_origem,
+                uf_destino=uf_destino,
+                distancia=distance_float,
+                pedagios=pedagios_float,
                 ip_address=ip_address,
                 tipo_consulta="batch",
                 grupo_id=grupo_id,
@@ -129,6 +194,8 @@ async def processar_upload_background(
 ):
     """Processa upload em background com suporte a ID da planilha e cache"""
     try:
+        print(f"🚀 INICIANDO processar_upload_background para upload {upload_id}, grupo {grupo_id}")
+        
         processing_status[upload_id] = {
             "status": "processing",
             "total_rotas": len(df),
@@ -201,8 +268,12 @@ async def processar_upload_background(
         
         # Atualizar estatísticas do grupo
         if grupo_id:
+            print(f"🔄 Chamando atualizar_estatisticas_grupo para grupo {grupo_id}...")
             from ..api.groups import atualizar_estatisticas_grupo
             atualizar_estatisticas_grupo(db, grupo_id)
+            print(f"✅ atualizar_estatisticas_grupo concluída para grupo {grupo_id}")
+        else:
+            print(f"⚠️ grupo_id é None, não atualizando estatísticas")
         
         # Marcar como concluído
         processing_status[upload_id].update({
@@ -267,7 +338,7 @@ async def calculate_route(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao calcular rota: {str(e)}")
 
-@router.post("/calculate-multiple", response_model=RouteResponse)
+@router.post("/calculate-multiple", response_model=RouteMultipleResponse)
 async def calculate_multiple_route(
     route_data: RouteMultipleCalculate,
     request: Request,
@@ -289,15 +360,15 @@ async def calculate_multiple_route(
         consulta = Consulta(
             origem=route_data.origem,
             destino=destinos_str,
-            distancia=resultado.get("distance") if isinstance(resultado.get("distance"), (int, float)) else None,
-            pedagios=resultado.get("pedagios") if isinstance(resultado.get("pedagios"), (int, float)) else None,
+            distancia=resultado.get("total_distance") if isinstance(resultado.get("total_distance"), (int, float)) else None,
+            pedagios=resultado.get("total_pedagios") if isinstance(resultado.get("total_pedagios"), (int, float)) else None,
             ip_address=ip_address,
             tipo_consulta="multiple"
         )
         db.add(consulta)
         db.commit()
         
-        return RouteResponse(**resultado)
+        return RouteMultipleResponse(**resultado)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao calcular rota múltipla: {str(e)}")
@@ -317,12 +388,70 @@ async def upload_excel(
         
         # Lê o arquivo Excel
         contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
+        print(f"📄 Arquivo recebido: {file.filename}, tamanho: {len(contents)} bytes")
+        
+        try:
+            df = pd.read_excel(io.BytesIO(contents))
+            print(f"📊 DataFrame criado: {df.shape}, colunas: {df.columns.tolist()}")
+        except Exception as e:
+            print(f"❌ Erro ao ler Excel: {e}")
+            raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo Excel: {str(e)}")
         
         # Verifica se as colunas necessárias existem
-        required_columns = ['origem', 'destino']
-        if not all(col in df.columns for col in required_columns):
-            raise HTTPException(status_code=400, detail="Planilha deve conter colunas: origem, destino")
+        # Mapear nomes de colunas do novo padrão
+        origem_col = None
+        destino_col = None
+        
+        # Procurar coluna de origem (pode ser "Origem")
+        for col in df.columns:
+            if col.lower() in ['origem', 'origin']:
+                origem_col = col
+                break
+        
+        # Procurar coluna de destino (pode ser "Destino (Cidade/Estado)")
+        for col in df.columns:
+            if col.lower() in ['destino', 'destination'] or 'destino' in col.lower():
+                destino_col = col
+                break
+        
+        if not origem_col or not destino_col:
+            raise HTTPException(status_code=400, detail=f"Planilha deve conter colunas de origem e destino. Colunas encontradas: {df.columns.tolist()}")
+        
+        # Renomear colunas para o formato esperado pelo código
+        df = df.rename(columns={
+            origem_col: 'origem',
+            destino_col: 'destino'
+        })
+        
+        # Mapear outras colunas do novo padrão
+        id_col = None
+        uf_origem_col = None
+        uf_destino_col = None
+        
+        for col in df.columns:
+            if col.lower() in ['id', 'codigo', 'cod']:
+                id_col = col
+            elif col.lower() in ['uf', 'estado', 'state']:
+                uf_origem_col = col
+            elif col.lower() in ['uf.1', 'uf_destino', 'estado_destino']:
+                uf_destino_col = col
+        
+        if id_col:
+            df = df.rename(columns={id_col: 'id'})
+        if uf_origem_col:
+            df = df.rename(columns={uf_origem_col: 'uf'})
+        if uf_destino_col:
+            df = df.rename(columns={uf_destino_col: 'uf.1'})
+        
+        print(f"📋 Colunas após mapeamento: {df.columns.tolist()}")
+        print(f"📊 Primeiras linhas: {df.head(2).to_dict()}")
+        
+        # Verificar se tem o novo formato (com UF)
+        has_new_format = any(col in df.columns for col in ['uf', 'uf.1'])
+        if has_new_format:
+            print(f"Detectado novo formato de planilha com UF")
+        else:
+            print(f"Usando formato antigo de planilha")
         
         # Gerar ID único para este upload
         upload_id = str(uuid.uuid4())[:8]
@@ -333,7 +462,18 @@ async def upload_excel(
         print(f"👥 Grupo: {grupo_id if grupo_id else 'Nenhum'}")
         
         # Iniciar processamento em background
-        asyncio.create_task(processar_upload_background(upload_id, df, grupo_id, ip_address, db))
+        print(f"🔄 Executando processamento para upload {upload_id}...")
+        try:
+            # Executar processamento diretamente
+            await processar_upload_background(upload_id, df, grupo_id, ip_address, db)
+            print(f"✅ Processamento concluído para upload {upload_id}")
+        except Exception as e:
+            print(f"❌ Erro no processamento: {e}")
+            processing_status[upload_id] = {
+                "status": "error",
+                "erro": str(e),
+                "fim": datetime.now()
+            }
         
         return {
             "upload_id": upload_id,
@@ -343,7 +483,10 @@ async def upload_excel(
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao processar arquivo: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ Erro detalhado no upload: {error_details}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar arquivo: {str(e)} - Detalhes: {error_details}")
 
 @router.get("/upload-status/{upload_id}")
 async def get_upload_status(upload_id: str):

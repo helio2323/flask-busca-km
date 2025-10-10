@@ -24,9 +24,9 @@ if %errorlevel% equ 0 (
     echo ✅ RouteCalc Pro (Desenvolvimento) iniciado com sucesso!
     echo.
     echo 🌐 Aplicações disponíveis:
-    echo    • Frontend Dev: http://localhost:3001 (com hot reload)
-    echo    • Backend API: http://localhost:50001 (com hot reload)
-    echo    • API Docs: http://localhost:50001/docs
+    echo    • Frontend Dev: http://localhost:5002 (com hot reload)
+    echo    • Backend API: http://localhost:5001 (com hot reload)
+    echo    • API Docs: http://localhost:5001/docs
     echo    • PostgreSQL: localhost:5432
     echo.
     echo 📋 Comandos úteis:

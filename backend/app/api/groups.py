@@ -16,6 +16,8 @@ from ..services.route_service import RouteService
 def atualizar_estatisticas_grupo(db: Session, grupo_id: int):
     """Atualiza as estatísticas de um grupo baseado nas consultas"""
     try:
+        print(f"🔍 Atualizando estatísticas para grupo {grupo_id}...")
+        
         # Buscar estatísticas das consultas do grupo
         stats = db.query(
             func.count(Consulta.id).label('total_rotas'),
@@ -23,15 +25,20 @@ def atualizar_estatisticas_grupo(db: Session, grupo_id: int):
             func.coalesce(func.sum(Consulta.pedagios), 0).label('total_pedagios')
         ).filter(Consulta.grupo_id == grupo_id).first()
         
+        print(f"📊 Estatísticas encontradas: {stats.total_rotas} rotas, {stats.total_distancia} km, R$ {stats.total_pedagios}")
+        
         # Atualizar o grupo
         grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
         if grupo:
+            print(f"📝 Atualizando grupo {grupo_id}...")
             grupo.total_rotas = stats.total_rotas or 0
             grupo.total_distancia = float(stats.total_distancia or 0)
             grupo.total_pedagios = float(stats.total_pedagios or 0)
             db.commit()
             
-            print(f"📊 Estatísticas atualizadas para grupo {grupo_id}: {stats.total_rotas} rotas, {stats.total_distancia} km, R$ {stats.total_pedagios}")
+            print(f"✅ Estatísticas atualizadas para grupo {grupo_id}: {stats.total_rotas} rotas, {stats.total_distancia} km, R$ {stats.total_pedagios}")
+        else:
+            print(f"❌ Grupo {grupo_id} não encontrado!")
             
     except Exception as e:
         print(f"❌ Erro ao atualizar estatísticas do grupo {grupo_id}: {str(e)}")
@@ -215,9 +222,11 @@ async def download_grupo_rotas(grupo_id: int, db: Session = Depends(get_db)):
             data.append({
                 "ID": rota.planilha_id or "",
                 "Origem": rota.origem,
+                "UF": rota.uf_origem or "",
                 "Destino": destino_limpo,
+                "UF.1": rota.uf_destino or "",
                 "Distância (km)": rota.distancia if rota.distancia else "Erro",
-                "Pedágios (R$)": rota.pedagios if rota.pedagios else "Erro",
+                "Pedágios (R$)": rota.pedagios if rota.pedagios is not None else 0,
                 "Fonte": "Cache" if rota.cache_hit == "true" else "API",
                 "Data": rota.data_consulta.strftime("%d/%m/%Y %H:%M")
             })

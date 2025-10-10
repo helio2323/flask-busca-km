@@ -16,5 +16,14 @@ class RouteResponse(BaseModel):
     distance: Union[Decimal, str]
     pedagios: Union[Decimal, str]
 
+class RouteMultipleResponse(BaseModel):
+    origem: str
+    destinos: List[str]
+    total_distance: Union[Decimal, str]
+    total_pedagios: Union[Decimal, str]
+    tempo_estimado: Union[Decimal, str, None] = None
+    combustivel_estimado: Union[Decimal, str, None] = None
+    fonte: str = "API Rotas Brasil"
+
 class RouteBatchResponse(BaseModel):
     resultados: List[RouteResponse]

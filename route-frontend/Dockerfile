@@ -1,6 +1,10 @@
 # Dockerfile para Next.js Frontend
 FROM node:18-alpine AS base
 
+# Aceitar argumentos de build
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Instalar dependências apenas quando necessário
 FROM base AS deps
 # Verificar https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine para entender por que libc6-compat pode ser necessário.

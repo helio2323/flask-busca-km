@@ -1,0 +1,14 @@
+curl ^"https://rotasbrasil.com.br/roterizador/buscaRota/?pontos=-46.2558332,-23.9927768;-46.884506,-23.1887668^&alternatives=true^&eixos=2^&veiculo=1^&origem=Guaruj^%^C3^%^A1,^%^20S^%^C3^%^A3o^%^20Paulo,^%^20BR^&destino=Jundia^%^C3^%^AD,^%^20S^%^C3^%^A3o^%^20Paulo,^%^20BR^&st=false^&combustivel=^&consumo=^&evitarPedagio=false^&recaptchaRespostaCliente=0cAFcWeA5T_9JrEsMPEqBuFiC_-asCjKx1VknRHQCh8XLjG1UTq5qP_OOahYcjSU7t8QzsjAL1P8cFjW1a_dt75dEZmw2AcooV9GCZTx9CBfWuWTmBnFpntKdYPrXRYUAUZRElta40W3aO9z6u2Y1QSnvtP0jm220QvAuhov5L1Bc3tvvPncrlcoOGzWo-55KDRU2n6qQkqY__IwfUUQAzEe0PZ9EqdofPmGhsqnBeizp6ub7m2PhPl1QhtjOhguT7JTu0RIJjuRUvu_hQSrGLgQrk26b5dLThLzwONwt4CQijvhyfniG6Jz3fxW2omiLl_mu0jtfpZLtfRGbV_-B-qBw2lJo0FEINc4LYOOfocsW94SwFRP5x81nUaW6p3OW1d2tpFm2f6vz3t2NUJ8oscv3jA43HodkU0S5S5S-itV-1J0x_gspu8tWfoCNPzWRnz-YtDm0Cc6kPG6l9H8RDXeL554Zhayoy83YM1qQiZ85R-YoHtNK14wgADKtLk22LTV3KXbDd-69ssh8OBAFglJF_LB0O14iM2t-vW4b89JDqlTQWAbZl_fR-IwCM_G0bUcKNh1h4rvuQhugsDAAmkD3xnjvUm_WQulADF-fXov4i7ngmvr3oAAclciZvT2qRkOydnPz6XSSCnsfMY4ENL2rG9H0Tmy2IlvnhIp1hIAGk8xUFS78-zJTt3PjagtS2RkNta_rTLAj9uglIW_a9FSAxAF-wG4qsmAWQC1K-IKZOZFj_x0hhyYzrPo1kmziQiHHLBhXh-KHD^&recaptchaRespostaV3=true^&evitarBalsa=false^&meioPagamento=^&fornecedorPagamento=^&dataTarifa=2025-10-09^" ^
+  -H ^"accept: */*^" ^
+  -H ^"accept-language: pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7^" ^
+  -b ^"RBNOTIFICATION=true; RBCOUNTNOTIFICATION=19; AdoptVisitorId=EwZgnAxgJlBsCmBaCB2eBDRAWM6yIA5YUpEBGEAVmDErTOnSA===; _gcl_au=1.1.1862013818.1758206226; JSESSIONID=5EE1B0F1E3964EB36E013F952F5CB5F9; AdoptConsent=N4Ig7gpgRgzglgFwgSQCIgFwgIwEMBsADAMwDsAHAMYC0EATPdQCxMTbW4QCc7x2EuKNgBmwgCa5K2EABoQANzjwEAewBOyMZhB1iXSmLH4I1SqQHMuuLtXL5SY6tmIBWOlxfnsB3LJAqABwRkADsAFVwAcxhMAG0QFygmcjo6QnY6MRJmF0kOB3InXDdybC5CD1wtOTFnUiTcQuw6N2Z8fBcOSi4bYnxyKEHhfEzKQj8ANRUAIQALWnJyYki/TmxSUkpKXCcoYhMWeuooQko6an2xOg6IfDEmUi4/BGmwrgAlYQB9MTQQAF05IEEAB5ACuCAi0TigJAlBUIRgEBCwS0WBgAGEAKoqMFfPwQeTIyEATwCEG0CHeAGkAIoOOl+eGI4kTCBqeAIzDEORggISJBiACCCG0aRaTkI1AqYWw5AwyQVhAAdG5SAAtEAAXyAA==; _gid=GA1.3.1248334668.1760035722; _ga=GA1.3.1608153696.1760035722; _gat_gtag_UA_75792079_1=1; _ga_VCFEL3RNQ0=GS2.1.s1760033242^$o17^$g1^$t1760036257^$j60^$l0^$h0; _ga_WVWRBJHEX6=GS2.1.s1760033242^$o17^$g1^$t1760036257^$j60^$l0^$h0; veiculo=1; eixo=2; precoCombustivel=; consumo=^" ^
+  -H ^"priority: u=1, i^" ^
+  -H ^"referer: https://rotasbrasil.com.br/^" ^
+  -H ^"sec-ch-ua: ^\^"Google Chrome^\^";v=^\^"141^\^", ^\^"Not?A_Brand^\^";v=^\^"8^\^", ^\^"Chromium^\^";v=^\^"141^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"sec-fetch-dest: empty^" ^
+  -H ^"sec-fetch-mode: cors^" ^
+  -H ^"sec-fetch-site: same-origin^" ^
+  -H ^"user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36^" ^
+  -H ^"x-requested-with: XMLHttpRequest^"

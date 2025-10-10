@@ -10,6 +10,8 @@ class Consulta(Base):
     planilha_id = Column(String(50), nullable=True)  # ID da planilha original
     origem = Column(String(255), nullable=False)
     destino = Column(String(255), nullable=False)
+    uf_origem = Column(String(10), nullable=True)  # UF da origem
+    uf_destino = Column(String(10), nullable=True)  # UF do destino
     distancia = Column(DECIMAL(10, 2), nullable=True)
     pedagios = Column(DECIMAL(10, 2), nullable=True)
     ip_address = Column(String(45), nullable=True)

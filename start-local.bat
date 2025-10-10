@@ -28,8 +28,8 @@ echo.
 echo ✅ Sistema iniciado!
 echo.
 echo 📍 URLs:
-echo   - Backend API: http://localhost:8000
-echo   - Documentação: http://localhost:8000/docs
+echo   - Backend API: http://localhost:5001
+echo   - Documentação: http://localhost:5001/docs
 echo   - PostgreSQL: localhost:5432
 echo.
 echo Para parar o PostgreSQL:
@@ -37,4 +37,4 @@ echo docker compose -f docker-compose-simple.yml down
 echo.
 echo Pressione Ctrl+C para parar o backend
 
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload

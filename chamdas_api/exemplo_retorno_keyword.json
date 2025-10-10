@@ -1,0 +1,132 @@
+[
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.2303767,
+        "lat": -30.0324999,
+        "nome": "Porto Alegre",
+        "rua": null,
+        "distrito": null,
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.18878818689657,
+        "lat": -30.100916650000002,
+        "nome": "Porto Alegre",
+        "rua": null,
+        "distrito": null,
+        "cidade": null,
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Av. independencia, Psicóloga Michele Silva Porto Alegre, Historic District, Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.22251573336712,
+        "lat": -30.029342749999998,
+        "nome": "Psicóloga Michele Silva Porto Alegre",
+        "rua": "Av. independencia",
+        "distrito": "Historic District",
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.18878818689657,
+        "lat": -30.100916650000002,
+        "nome": "Porto Alegre",
+        "rua": null,
+        "distrito": null,
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Largo Patrono Fernando Kroeff, Grêmio Foot-Ball Porto Alegrense, Medianeira, Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.21374022772092,
+        "lat": -30.06022725,
+        "nome": "Grêmio Foot-Ball Porto Alegrense",
+        "rua": "Largo Patrono Fernando Kroeff",
+        "distrito": "Medianeira",
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Metropolitan Region of Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.28285502987854,
+        "lat": -30.0549008,
+        "nome": "Metropolitan Region of Porto Alegre",
+        "rua": null,
+        "distrito": null,
+        "cidade": null,
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Rua Rádio e TV Gaúcha, RBS TV Porto Alegre, Santa Tereza, Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.23032754791751,
+        "lat": -30.0711894,
+        "nome": "RBS TV Porto Alegre",
+        "rua": "Rua Rádio e TV Gaúcha",
+        "distrito": "Santa Tereza",
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Ilha Porto Alegre, BR",
+        "lon": -58.14455950389251,
+        "lat": -6.427130249999999,
+        "nome": "Ilha Porto Alegre",
+        "rua": null,
+        "distrito": null,
+        "cidade": null,
+        "estado": null
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Porto de Porto Alegre, São Geraldo, Porto Alegre, Rio Grande do Sul, BR",
+        "lon": -51.210964260914125,
+        "lat": -30.0079006,
+        "nome": "Porto de Porto Alegre",
+        "rua": null,
+        "distrito": "São Geraldo",
+        "cidade": "Porto Alegre",
+        "estado": "Rio Grande do Sul"
+    },
+    {
+        "address": {
+            "road": true
+        },
+        "display_name": "Porto Alegre do Piauí, Piauí, BR",
+        "lon": -44.1965104,
+        "lat": -6.9717253,
+        "nome": "Porto Alegre do Piauí",
+        "rua": null,
+        "distrito": null,
+        "cidade": null,
+        "estado": "Piauí"
+    }
+]

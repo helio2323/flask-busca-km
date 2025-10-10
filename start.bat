@@ -25,8 +25,8 @@ if %errorlevel% equ 0 (
     echo.
     echo 🌐 Aplicações disponíveis:
     echo    • Frontend: http://localhost:5000
-    echo    • Backend API: http://localhost:50001
-    echo    • API Docs: http://localhost:50001/docs
+    echo    • Backend API: http://localhost:5001
+    echo    • API Docs: http://localhost:5001/docs
     echo    • PostgreSQL: localhost:5432
     echo.
     echo 📋 Comandos úteis:

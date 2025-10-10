@@ -12,10 +12,14 @@ class Settings(BaseSettings):
     
     # CORS
     backend_cors_origins: list = [
-        "http://localhost:5000",  # Next.js frontend
+        "http://localhost:3000",  # Next.js frontend padrão
+        "http://localhost:5000",  # Next.js frontend (nova porta)
         "http://localhost:5001",  # Next.js frontend dev
-        "http://127.0.0.1:5000",
+        "http://localhost:50001", # Next.js frontend atual
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5000",  # Nova porta frontend
         "http://127.0.0.1:5001",
+        "http://127.0.0.1:50001",
     ]
     
     # Cache settings
