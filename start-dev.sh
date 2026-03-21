@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
     echo "   • Frontend Dev: http://localhost:5002 (com hot reload)"
     echo "   • Backend API: http://localhost:5001 (com hot reload)"
     echo "   • API Docs: http://localhost:5001/docs"
-    echo "   • PostgreSQL: localhost:5432"
+    echo "   • PostgreSQL: localhost:5433"
     echo ""
     echo "📋 Comandos úteis:"
     echo "   • Ver logs: docker-compose logs -f"
