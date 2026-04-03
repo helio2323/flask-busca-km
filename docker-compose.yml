@@ -32,6 +32,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-rotas_db}
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - ADDITIONAL_CORS_ORIGINS=${ADDITIONAL_CORS_ORIGINS:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,13 +50,13 @@ services:
       context: ./route-frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5001/api/v1}
     container_name: routecalc-frontend
     ports:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5001/api/v1}
     depends_on:
       - backend
     networks:
@@ -72,7 +73,7 @@ services:
       - "5002:5000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5001/api/v1}
     depends_on:
       - backend
     volumes:
